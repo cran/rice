@@ -23,6 +23,9 @@ draw.ccurve(1600, 2020, BCAD=TRUE, cc2='nh1')
 draw.ccurve(1600, 2020, BCAD=TRUE, cc2='nh1', add.yaxis=TRUE)
 
 ## -----------------------------------------------------------------------------
+calBP.14C(900)
+
+## -----------------------------------------------------------------------------
 pMC.age(150, 1)
 
 ## -----------------------------------------------------------------------------
@@ -77,6 +80,9 @@ calib.130 <- caldist(130, 10, BCAD=TRUE)
 plot(calib.130, type="l")
 
 ## -----------------------------------------------------------------------------
+l.calib(145, 130, 10)
+
+## -----------------------------------------------------------------------------
 hpd(calib.130)
 
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
@@ -89,6 +95,25 @@ abline(v=points.2450, col=1:4, lty=2)
 ## ----fig.width=5, fig.asp=1---------------------------------------------------
 calibrate(130,10)
 
+## ----fig.width=5, fig.asp=1---------------------------------------------------
+try(calibrate(130,30))
+calibrate(130, 30, bombalert=FALSE)
+
+## -----------------------------------------------------------------------------
+younger(150, 130, 10)
+older(150, 130, 10)
+
+## ----fig.width=5, fig.asp=1---------------------------------------------------
+myshells <- map.shells(S=54, W=-8, N=61, E=0) # the northern part of the UK
+
+## ----fig.width=5, fig.asp=1---------------------------------------------------
+head(myshells)
+shells.mean(myshells)
+
+## ----fig.width=5, fig.asp=1---------------------------------------------------
+myshells <- find.shells(120, 10, 20)
+shells.mean(myshells, distance=TRUE)
+
 ## ----fig.width=4, fig.asp=1---------------------------------------------------
 set.seed(123)
 dates <- sort(sample(500:2500,5))
@@ -98,7 +123,7 @@ my.labels <- c("my", "very", "own", "simulated", "dates")
 draw.dates(dates, errors, depths, BCAD=TRUE, labels=my.labels, age.lim=c(0, 1800))
 
 ## ----fig.width=4, fig.asp=1---------------------------------------------------
-plot(300*1:5, 1:5, xlim=c(0, 1800), ylim=c(5,0), xlab="AD", ylab="dates")
+plot(300*1:5, 5:1, xlim=c(0, 1800), ylim=c(5,0), xlab="AD", ylab="dates")
 draw.dates(dates, errors, depths, BCAD=TRUE, add=TRUE, labels=my.labels, mirror=FALSE)
 
 ## ----fig.width=4, fig.asp=1---------------------------------------------------

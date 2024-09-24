@@ -2,7 +2,7 @@
 
 bibentry(
     bibtype = "Manual",
-    title = "rice: Radiocarbon Calibration Equations",
+    title = "rice: Radiocarbon Equations",
     author = person("Maarten", "Blaauw"),
     year = "2024",
     url = "https://CRAN.R-project.org/package=rice"
@@ -18,7 +18,7 @@ bibentry(
     volume = "56",
     pages = "555-559",
     doi = "10.2458/56.17455",
-    textVersion = "Millard, R., 2014. Conventions for Reporting Radiocarbon Determinations. Radiocarbon 56, 555-559. doi:10.2458/56.17455"
+    textVersion = "Millard, A.R., 2014. Conventions for reporting radiocarbon determinations. Radiocarbon 56, 555-559. doi:10.2458/56.17455"
   )
 
   reimer04 <- bibentry(
@@ -34,6 +34,19 @@ bibentry(
     pages = "1299-1304",
     doi = "10.1017/S0033822200033154",
     textVersion = "Reimer, R., Brown, T.A., Reimer, R.W., 2004. Discussion: Reporting and calibration of post-bomb 14C Data. Radiocarbon 46, 1299-1304. doi:10.1017/S0033822200033154"
+  )
+
+  reimerreimer <- bibentry(
+     bibtype = "Article",
+    title = "A marine reservoir correction database and on-line interface",
+    author = c(person("Paula", "Reimer"),
+               person("Ron W.", "Reimer")),
+    journal = "Radiocarbon",
+    year = "2001",
+    volume = "43",
+    pages = "461-463",
+    doi = "10.1017/S0033822200038339",
+    textVersion = "Reimer, P.J., Reimer, R.W., 2001. A marine reservoir correction database and on-line interface. Radiocarbon 43:461-463. doi:10.1017/S0033822200038339"
   )
 
   stuiverpolach <- bibentry(
