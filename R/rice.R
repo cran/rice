@@ -1,13 +1,11 @@
-# to do:
+# to do: 
 
-# add realms option to plots
+# write a decontaminate function (e.g. to find the contamination required to explain away a Shroud date)
 
-# should glue.ccurves and mix.ccurves also go into rice? Future work on mix.ccurves. But best keep within rintcal for purposes of backward compatability, and since it is closest related to calibration curves rather than e.g. calibration. 
-
-# AMS background calculations and fractionation corrections
-
-# smoothing
+# 'combine' to combine multiple distributions into 1 multiplied distribution
 
 # soil F14C simulation from Vegard
 
 # terr-marine contribution calculation
+
+# AMS background and fractionation corrections

@@ -22,43 +22,54 @@ draw.ccurve(1600, 2020, BCAD=TRUE, cc2='nh1')
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
 draw.ccurve(1600, 2020, BCAD=TRUE, cc2='nh1', add.yaxis=TRUE)
 
-## -----------------------------------------------------------------------------
-calBP.14C(900)
+## ----fig.width=4, fig.asp=.8--------------------------------------------------
+draw.ccurve(50000, 35000, realm="D")
 
 ## -----------------------------------------------------------------------------
-pMC.age(150, 1)
+calBPtoC14(10.5)
+BCADtoC14(1940:1950)
 
 ## -----------------------------------------------------------------------------
-age.pMC(-2300, 40)
+BCADtocalBP(2024)
+BCADtocalBP(-1, zero=TRUE)
+BCADtocalBP(-1, zero=FALSE)
 
 ## -----------------------------------------------------------------------------
-F14C.age(.150, .01)
+D14CtoF14C(152, t=4000)
+F14CtoD14C(0.71, t=4000)
 
 ## -----------------------------------------------------------------------------
-age.F14C(-2300, 40)
-
-## -----------------------------------------------------------------------------
-F14C.D14C(0.71, t=4000)
-D14C.F14C(152, 4000)
+C14toD14C(0.71, t=4000)
+D14CtoC14(152, t=4000)
 
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
-cc <- rintcal::ccurve()
-cc.Fmin <- age.F14C(cc[,2]+cc[,3])
-cc.Fmax <- age.F14C(cc[,2]-cc[,3])
-cc.D14Cmin <- F14C.D14C(cc.Fmin, cc[,1])
-cc.D14Cmax <- F14C.D14C(cc.Fmax, cc[,1])
+x <- seq(0, 55e3, length=1e3)
+cc <- calBPtoC14(x)
+Dcc <- calBPtoD14C(x)
+
 par(mar=c(4,3,1,3), bty="l")
-plot(cc[,1]/1e3, cc.D14Cmax, type="l", xlab="kcal BP", ylab="")
+plot(x/1e3, Dcc[,1]+Dcc[,2], type="l", xlab="kcal BP", ylab="")
 mtext(expression(paste(Delta, ""^{14}, "C")), 2, 1.7)
-lines(cc[,1]/1e3, cc.D14Cmin)
+lines(x/1e3, Dcc[,1]-Dcc[,2])
+
 par(new=TRUE)
-plot(cc[,1]/1e3, (cc[,2]+cc[,3])/1e3, type="l", xaxt="n", yaxt="n", col=4, xlab="", ylab="")
-lines(cc[,1]/1e3, (cc[,2]-cc[,3])/1e3, col=4)
-axis(4, col=4, col.axis=4)
+plot(x/1e3, (cc[,1]-cc[,2])/1e3, type="l", xaxt="n", yaxt="n", col=4, xlab="", ylab="")
+lines(x/1e3, (cc[,1]+cc[,2])/1e3, col=4)
 mtext(expression(paste(""^{14}, "C kBP")), 4, 2, col=4)
+axis(4, col=4, col.axis=4, col.ticks=4)
+
+## -----------------------------------------------------------------------------
+data(shroud)
+shroud
+pool(shroud$y,shroud$er) 
+Zu <- grep("ETH", shroud$ID) # Zurich lab only
+pool(shroud$y[Zu],shroud$er[Zu])
 
 ## -----------------------------------------------------------------------------
 contaminate(5000, 20, .01, 1)
+
+## -----------------------------------------------------------------------------
+contaminate(66e6, 1e6, .005, 1, F14C.er=0.01)
 
 ## ----fig.width=6, fig.asp=.8--------------------------------------------------
 real.14C <- seq(0, 50e3, length=200)
@@ -74,6 +85,19 @@ text(50e3, contaminate(50e3, c(), contam.legend, 1),
 
 ## ----fig.width=6, fig.asp=.8--------------------------------------------------
 draw.contamination()
+
+## ----fig.width=6, fig.asp=.8--------------------------------------------------
+decontaminate(591, BCADtoC14(40)[1], 1)
+
+## ----fig.width=6, fig.asp=.8--------------------------------------------------
+decontaminate(591, BCADtoC14(40)[1], BCADtoF14C(1400)[1])
+
+## -----------------------------------------------------------------------------
+Cs <- c(.02, .05, .03, .04) # carbon contents of each fraction
+wghts <- c(5, 4, 2, .5) # weights for all fractions, e.g., in mg
+ages <- c(130, 130, 130, NA) # ages of all fractions. The unmeasured one is NA
+errors <- c(10, 12, 10, NA) # errors, unmeasured is NA
+fractions(150, 20, Cs, wghts, ages, errors) # assuming a bulk age of 150 +- 20 C14 BP 
 
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
 calib.130 <- caldist(130, 10, BCAD=TRUE)
@@ -93,7 +117,11 @@ points.2450
 abline(v=points.2450, col=1:4, lty=2)
 
 ## ----fig.width=5, fig.asp=1---------------------------------------------------
-calibrate(130,10)
+calibrate(2450, 20)
+
+## ----fig.width=5, fig.asp=1---------------------------------------------------
+mycurve <- smooth.ccurve(smooth=50)
+calibrate(2450, 20, thiscurve=mycurve)
 
 ## ----fig.width=5, fig.asp=1---------------------------------------------------
 try(calibrate(130,30))

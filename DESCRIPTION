@@ -1,8 +1,8 @@
 Package: rice
 Type: Package
 Title: Radiocarbon Equations
-Version: 0.2.0
-Date: 2024-09-03
+Version: 0.3.0
+Date: 2024-10-21
 Author: Maarten Blaauw [aut, cre] (<https://orcid.org/0000-0002-5680-1515>)
 Authors@R: c(
   person("Maarten", "Blaauw", email = "maarten.blaauw@qub.ac.uk", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-5680-1515")))
@@ -15,9 +15,10 @@ Imports: rintcal (>= 1.0.0), rlang, ggplot2, rnaturalearth,
         rnaturalearthdata
 Suggests: knitr, rmarkdown, utf8, remotes
 Depends: R (>= 3.5.0)
+Language: en-GB
 VignetteBuilder: knitr
 NeedsCompilation: no
 LazyData: true
-Packaged: 2024-09-24 09:41:27 UTC; maarten
+Packaged: 2024-10-21 19:27:03 UTC; maarten
 Repository: CRAN
-Date/Publication: 2024-09-24 10:10:03 UTC
+Date/Publication: 2024-10-21 19:50:02 UTC

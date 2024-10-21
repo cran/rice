@@ -37,8 +37,6 @@ library(rice)
 
 # Calibration curves
 
-## Plots
-
 Calibration curves can be plotted:
 
 ```{r, fig.width=4, fig.asp=.8}
@@ -69,73 +67,103 @@ The postbomb curve dwarfs the IntCal20 curve, so we could also plot both on sepa
 draw.ccurve(1600, 2020, BCAD=TRUE, cc2='nh1', add.yaxis=TRUE)
 ```
 
-To find the IntCal20 radiocarbon year belonging to a certain calendar year, e.g., 900 cal BP:
+The calibration curves can also be plotted in the 'realms' of F14C, pMC or D14C (see below), e.g.:
 
-```{r}
-calBP.14C(900)
+```{r, fig.width=4, fig.asp=.8}
+draw.ccurve(50000, 35000, realm="D")
 ```
 
-# Calculations
+# Realms
 
-This package also provides functions related to radiocarbon 'realms'. First there are two functions to calculate radiocarbon ages from pMC values (in this case of a postbomb date):
+This package also provides functions to translate values between the radiocarbon-relevant 'realms' of cal BP (calendar years before AD 1950), BC/AD, C14, F14C, pMC and D14C. The following Table lists the available functions:
+
+| from\\to  | calBP         | BCAD          | C14          | F14C         | pMC         | D14C         |
+|-----------|---------------|---------------|--------------|--------------|-------------|--------------|
+| **calBP** | -             | `calBPtoBCAD` | `calBPtoC14` | `calBPtoF14C`| `calBPtopMC`| `calBPtoD14C`|
+| **BCAD**  | `BCADtocalBP` | -             | `BCADtoC14`  | `BCADtoF14C` | `BCADtopMC` | `BCADtoD14C` |
+| **C14**   | NA            | NA            | -            | `C14toF14C`  | `C14topMC`  | `C14toD14C`  |
+| **F14C**  | NA            | NA            | `F14CtoC14`  | -            | `F14CtopMC` | `F14CtoD14C` |
+| **pMC**   | NA            | NA            | `pMCtoC14`   | `pMCtoF14C`  |  -          | `pMCtoD14C`  |
+| **D14C**  | NA            | NA            | `D14CtoC14`  | `D14CtoF14C` | `D14CtopMC` |  -           |
+
+
+As an example of the above functions, the IntCal20 C14 age and error belonging to one or more cal BP or BCAD ages can be found (interpolating linearly where necessary):  
 
 ```{r}
-pMC.age(150, 1)
+calBPtoC14(10.5)
+BCADtoC14(1940:1950)
 ```
 
-and the other way round:
+To translate between BC/AD and cal BP ages, we can use (the last example avoids 0 BC/AD):
 
 ```{r}
-age.pMC(-2300, 40)
+BCADtocalBP(2024)
+BCADtocalBP(-1, zero=TRUE)
+BCADtocalBP(-1, zero=FALSE)
 ```
 
-The same for calculations in the F^14^C realm:
+D14C ($\Delta$^14^C, a proxy for atmospheric ^14^C concentration at *t* cal BP) can be transferred to F^14^C, and the other way around:
 
 ```{r}
-F14C.age(.150, .01)
+D14CtoF14C(152, t=4000)
+F14CtoD14C(0.71, t=4000)
 ```
 
-and the other way round:
+This can also be done with C14 ages:
 
 ```{r}
-age.F14C(-2300, 40)
-```
-
-To transfer $\Delta^{14}C$ (a proxy for atmospheric ^14^C concentration at *t* cal BP) to F^14^C, and the other way around:
-
-```{r}
-F14C.D14C(0.71, t=4000)
-D14C.F14C(152, 4000)
+C14toD14C(0.71, t=4000)
+D14CtoC14(152, t=4000)
 ```
 
 These functions can be used to investigate $\Delta^{14}C$ over time:
 
 ```{r, fig.width=4, fig.asp=.8}
-cc <- rintcal::ccurve()
-cc.Fmin <- age.F14C(cc[,2]+cc[,3])
-cc.Fmax <- age.F14C(cc[,2]-cc[,3])
-cc.D14Cmin <- F14C.D14C(cc.Fmin, cc[,1])
-cc.D14Cmax <- F14C.D14C(cc.Fmax, cc[,1])
+x <- seq(0, 55e3, length=1e3)
+cc <- calBPtoC14(x)
+Dcc <- calBPtoD14C(x)
+
 par(mar=c(4,3,1,3), bty="l")
-plot(cc[,1]/1e3, cc.D14Cmax, type="l", xlab="kcal BP", ylab="")
+plot(x/1e3, Dcc[,1]+Dcc[,2], type="l", xlab="kcal BP", ylab="")
 mtext(expression(paste(Delta, ""^{14}, "C")), 2, 1.7)
-lines(cc[,1]/1e3, cc.D14Cmin)
+lines(x/1e3, Dcc[,1]-Dcc[,2])
+
 par(new=TRUE)
-plot(cc[,1]/1e3, (cc[,2]+cc[,3])/1e3, type="l", xaxt="n", yaxt="n", col=4, xlab="", ylab="")
-lines(cc[,1]/1e3, (cc[,2]-cc[,3])/1e3, col=4)
-axis(4, col=4, col.axis=4)
+plot(x/1e3, (cc[,1]-cc[,2])/1e3, type="l", xaxt="n", yaxt="n", col=4, xlab="", ylab="")
+lines(x/1e3, (cc[,1]+cc[,2])/1e3, col=4)
 mtext(expression(paste(""^{14}, "C kBP")), 4, 2, col=4)
+axis(4, col=4, col.axis=4, col.ticks=4)
 ```
 
-## Contamination
+# Pooling dates
 
-The above functions can be used to calculate the effect of contamination on radiocarbon ages, e.g. what age would be observed if material with a "true" radiocarbon age of 5000 +- 20 ^14^C BP would be contaminated with 1% of modern carbon (F^14^C=1)?
+Sometimes, the same material is measured using multiple radiocarbon dates. If we can be sure that the dated material stems from one single age in time (e.g., multiple dates on the same single bone, or perhaps the cereal grains within one bowl which could be assumed to all stem from the same season), then we can check to which degree the dates agree using a Chi2-test (Ward & Wilson 1978)[^5]. If they do agree, then a pooled mean can be calculated. For example, take the Shroud of Turin, which was dated multiple times in three different labs:
+
+```{r}
+data(shroud)
+shroud
+pool(shroud$y,shroud$er) 
+Zu <- grep("ETH", shroud$ID) # Zurich lab only
+pool(shroud$y[Zu],shroud$er[Zu])
+```
+
+
+
+# Contamination
+
+To calculate the effect of contamination on radiocarbon ages, e.g. what age would be observed if material with a "true" radiocarbon age of 5000 +- 20 ^14^C BP would be contaminated with 1% of modern carbon (F^14^C=1)?
 
 ```{r}
 contaminate(5000, 20, .01, 1)
 ```
 
-The effect of different levels of contamination can also be visualised:
+Or imagine that you measured a dinosaur bone, dating to far beyond the limit of radiocarbon dating, and the sample is very clean as it contains only 0.5% modern contamination:
+
+```{r}
+contaminate(66e6, 1e6, .005, 1, F14C.er=0.01)
+```
+
+The effect of different levels of contamination can be visualised:
 
 ```{r, fig.width=6, fig.asp=.8}
 real.14C <- seq(0, 50e3, length=200)
@@ -156,7 +184,33 @@ If that is too much code for you, try this function instead:
 draw.contamination()
 ```
 
-## Calibration
+We can also calculate the amount of contamination required to 'explain away' certain ages. For example, one of the measurements of the Shroud of Turin dates to 591 &pm; 30 C14 BP. How much contamination would have to be inferred for the material to really date to, say, AD 40?
+
+```{r, fig.width=6, fig.asp=.8}
+decontaminate(591, BCADtoC14(40)[1], 1)
+```
+
+So we'd require the sample to have been contaminated by 35% modern carbon to still date to around AD 40. But what if the sample had been repaired (or burned, somehow 'adding carbon') in, say, AD 1400, thus adding material of an not-entirely-modern F14C value (i.e., taking into account both the atmospheric C14 concentrations in AD 1400 and the fact that some of the C14 will have decayed since then)?
+
+```{r, fig.width=6, fig.asp=.8}
+decontaminate(591, BCADtoC14(40)[1], BCADtoF14C(1400)[1])
+```
+
+This means that the dated sample would have to consist almost entirely of Medieval age material - which is exactly what was found by Damon et al. (1989)[^6].
+
+# Fractions
+
+Sometimes, one needs to estimate a missing radiocarbon age from a sample which has C14 dates on both the entire sample and on fractions, but where one of the samples was too small to be dated. This can be used in for example soils separated into size fractions, where one of the samples turns out to be too small to be dated. Requires to have the bulk age, the ages of the dated fractions, and the carbon contents and weights of all fractions.
+
+```{r}
+Cs <- c(.02, .05, .03, .04) # carbon contents of each fraction
+wghts <- c(5, 4, 2, .5) # weights for all fractions, e.g., in mg
+ages <- c(130, 130, 130, NA) # ages of all fractions. The unmeasured one is NA
+errors <- c(10, 12, 10, NA) # errors, unmeasured is NA
+fractions(150, 20, Cs, wghts, ages, errors) # assuming a bulk age of 150 +- 20 C14 BP 
+```
+
+# Calibration
 
 Now on to calibration of radiocarbon dates. We can obtain the calibrated probability distributions from radiocarbon dates, e.g., one of 130 &pm; 10 C14 BP:
 
@@ -189,7 +243,14 @@ abline(v=points.2450, col=1:4, lty=2)
 
 Want a plot of the radiocarbon and calibrated distributions, together with their hpd ranges?
 ```{r, fig.width=5, fig.asp=1}
-calibrate(130,10)
+calibrate(2450, 20)
+```
+
+Sometimes one would want to smooth a calibration curve to take into account the fact that material has accumulated over a certain time (e.g., a tree, or peat). To do so, a calibration curve can be smoothed to produce a tailor-made calibration curve, after which this one is used to calibrate the date:
+
+```{r, fig.width=5, fig.asp=1}
+mycurve <- smooth.ccurve(smooth=50)
+calibrate(2450, 20, thiscurve=mycurve)
 ```
 
 Calibrating 'young' radiocarbon dates (close to 0 C14 BP) can cause an error, because a bomb curve might be required to capture the youngest ages. Do not worry, there is an option to avoid that error:
@@ -207,9 +268,9 @@ older(150, 130, 10)
 ```
 
 
-## Marine offsets
+# Marine offsets
 
-Dates on marine material will often have to be calibrated with the Marine20 calibration curve[^5], and many coastal locations will have an additional regional reservoir offset (deltaR) (Reimer and Reimer 2006)[^6]. The on-line database at <http://calib.org/marine/> is very useful for this; it features the radiocarbon ages and deltaR of many shells of known collection date. The data from this database were downloaded (in August 2024) and can be queried. For example, a map can be drawn with all shell data within certain coordinates:
+Dates on marine material will often have to be calibrated with the Marine20 calibration curve[^7], and many coastal locations will have an additional regional reservoir offset (deltaR) (Reimer and Reimer 2006)[^8]. The on-line database at <http://calib.org/marine/> is very useful for this; it features the radiocarbon ages and deltaR of many shells of known collection date. The data from this database were downloaded (in August 2024) and can be queried. For example, a map can be drawn with all shell data within certain coordinates:
 
 ```{r, fig.width=5, fig.asp=1}
 myshells <- map.shells(S=54, W=-8, N=61, E=0) # the northern part of the UK
@@ -228,7 +289,7 @@ myshells <- find.shells(120, 10, 20)
 shells.mean(myshells, distance=TRUE)
 ```
 
-## Multiple calibrations
+# Multiple calibrations
 
 You can also draw one or more calibrated distributions:
 
@@ -248,7 +309,7 @@ plot(300*1:5, 5:1, xlim=c(0, 1800), ylim=c(5,0), xlab="AD", ylab="dates")
 draw.dates(dates, errors, depths, BCAD=TRUE, add=TRUE, labels=my.labels, mirror=FALSE)
 ```
 
-or get creative (inspired by Jocelyn Bell Burnell[^7], Joy Division[^8] and the Hallstatt Plateau[^9]):
+or get creative (inspired by Jocelyn Bell Burnell[^9], Joy Division[^10] and the Hallstatt Plateau[^11]):
 
 ```{r, fig.width=4, fig.asp=1}
 par(bg="black", mar=rep(1, 4))
@@ -268,12 +329,16 @@ and calibration of post-bomb 14C Data. *Radiocarbon* 46, 1299-1304 <http://dx.do
 
 [^4]: Reimer, P.J., et al., 2020. The IntCal20 Northern Hemisphere radiocarbon age calibration curve (0-55 cal kBP). *Radiocarbon* 62, 725-757 <http://dx.doi.org/10.1017/S0033822200032999>
 
-[^5]: Heaton, T.J., et al., 2020. Marine20-the marine radiocarbon age calibration curve (0-55,000 cal BP). *Radiocarbon* 62, 779-820 <http://dx.doi.org/10.1017/RDC.2020.68>
+[^5]: Ward, G.K., Wilson, S., 1978. Procedures for comparing and combining radiocarbon age determinations: A critique. *Archaeometry* 20, 19-31 <http://dx.doi.org/10.1111/j.1475-4754.1978.tb00208.x>
 
-[^6]: Reimer, P.J., Reimer, R.W., 2006. A marine reservoir correction database and on-line interface. *Radiocarbon* 43, 461-463. <http://dx.doi.org/10.1017/S0033822200038339>
+[^6]: Damon, P., et al., 1989. Radiocarbon dating of the Shroud of Turin. *Nature* 337, 611–615. <https://doi.org/10.1038/337611a0>
 
-[^7]: https://www.cam.ac.uk/stories/journeysofdiscovery-pulsars
+[^7]: Heaton, T.J., et al., 2020. Marine20-the marine radiocarbon age calibration curve (0-55,000 cal BP). *Radiocarbon* 62, 779-820 <http://dx.doi.org/10.1017/RDC.2020.68>
 
-[^8]: https://www.radiox.co.uk/artists/joy-division/cover-joy-division-unknown-pleasures-meaning/
+[^8]: Reimer, P.J., Reimer, R.W., 2006. A marine reservoir correction database and on-line interface. *Radiocarbon* 43, 461-463. <http://dx.doi.org/10.1017/S0033822200038339>
 
-[^9]: https://en.wikipedia.org/wiki/Hallstatt_plateau
+[^9]: https://www.cam.ac.uk/stories/journeysofdiscovery-pulsars
+
+[^10]: https://www.radiox.co.uk/artists/joy-division/cover-joy-division-unknown-pleasures-meaning/
+
+[^11]: https://en.wikipedia.org/wiki/Hallstatt_plateau

@@ -10,10 +10,13 @@ calibrate(
   cc = 1,
   postbomb = FALSE,
   bombalert = TRUE,
+  thiscurve = c(),
+  as.F = FALSE,
   reservoir = 0,
   prob = 0.95,
   BCAD = FALSE,
   ka = FALSE,
+  draw = TRUE,
   cal.lab = c(),
   C14.lab = c(),
   cal.lim = c(),
@@ -28,22 +31,26 @@ calibrate(
   dist.float = c(0.01, 0.01),
   cal.rev = FALSE,
   yr.steps = FALSE,
+  cc.resample = 5,
   threshold = 5e-04,
   edge = TRUE,
   normal = TRUE,
   t.a = 3,
   t.b = 4,
   rounded = 1,
+  every = 1,
   extend.range = 0.05,
   legend.cex = 0.8,
   legend1.loc = "topleft",
   legend2.loc = "topright",
+  print.truncate.warning = TRUE,
   mgp = c(2, 1, 0),
   mar = c(3, 3, 1, 1),
   xaxs = "i",
   yaxs = "i",
   bty = "l",
   cc.dir = NULL,
+  cc.er = 0,
   ...
 )
 }
@@ -58,6 +65,10 @@ calibrate(
 
 \item{bombalert}{Warn if a date is close to the lower limit of the IntCal curve. Defaults to \code{postbomb=TRUE}.}
 
+\item{thiscurve}{As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). Defaults to c().}
+
+\item{as.F}{Whether or not to calculate ages in the F14C realm. Defaults to \code{as.F=FALSE}, which uses the C14 realm.}
+
 \item{reservoir}{Reservoir age, or reservoir age and age offset.}
 
 \item{prob}{Probability confidence intervals (between 0 and 1).}
@@ -65,6 +76,8 @@ calibrate(
 \item{BCAD}{Use BC/AD or cal BP scale (default cal BP).}
 
 \item{ka}{Use thousands of years instead of years in the plots and hpd ranges. Defaults to FALSE.}
+
+\item{draw}{Whether or not to draw the date. Can be set as FALSE to speed up things}
 
 \item{cal.lab}{Label of the calendar/horizontal axis. Defaults to the calendar scale, but alternative names can be provided.}
 
@@ -94,6 +107,8 @@ calibrate(
 
 \item{yr.steps}{Temporal resolution at which C-14 ages are calibrated (in calendar years). By default follows the spacing in the calibration curve.}
 
+\item{cc.resample}{The IntCal20 curves have different densities (every year between 0 and 5 kcal BP, then every 5 yr up to 15 kcal BP, then every 10 yr up to 25 kcal BP, and then every 20 yr up to 55 kcal BP). If calibrated ages span these density ranges, their drawn heights can differ, as can their total areas (which should ideally all sum to the same size). To account for this, resample to a constant time-span, using, e.g., cc.resample=5 for 5-yr timespans.}
+
 \item{threshold}{Below which value should probabilities be excluded from calculations.}
 
 \item{edge}{How to treat dates are at or beyond the edge of the calibration curve. If dates are truncated, a warning is given. If they lie beyond the calibration curve, an error is given.}
@@ -102,9 +117,11 @@ calibrate(
 
 \item{t.a}{Value a of the t distribution (defaults to 3).}
 
-\item{t.b}{Value a of the t distribution (defaults to 4).}
+\item{t.b}{Value b of the t distribution (defaults to 4).}
 
 \item{rounded}{Rounding of the percentages of the reported hpd ranges. Defaults to 1 decimal.}
+
+\item{every}{Yearly precision (defaults to \code{every=1}).}
 
 \item{extend.range}{Range by which the axes are extended beyond the data limits. Defaults to 5\%.}
 
@@ -113,6 +130,8 @@ calibrate(
 \item{legend1.loc}{Where the first legend (with the calibration curve name and the uncalibrated date) is plotted. Defaults to topleft.}
 
 \item{legend2.loc}{Where the second legend (with the hpd ranges) is plotted. Defaults to topright.}
+
+\item{print.truncate.warning}{Whether or not a truncation warning is printed on the plot. Defaults to \code{print.truncate.warning=TRUE}.}
 
 \item{mgp}{Axis text margins (where should titles, labels and tick marks be plotted).}
 
@@ -125,6 +144,8 @@ calibrate(
 \item{bty}{Draw a box around the graph ("n" for none, and "l", "7", "c", "u", "]" or "o" for correspondingly shaped boxes).}
 
 \item{cc.dir}{Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.}
+
+\item{cc.er}{The error of the calibration curve. Only used for plotting the uncalibrated C14 distribution, which by default only shows the date's uncertainty (the calibration curve uncertainty is indeed taken into account during calibration). If known, the calibration curve's error can be added.}
 
 \item{...}{Other plotting parameters.}
 }
