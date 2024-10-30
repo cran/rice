@@ -65,32 +65,46 @@ pool(shroud$y,shroud$er)
 Zu <- grep("ETH", shroud$ID) # Zurich lab only
 pool(shroud$y[Zu],shroud$er[Zu])
 
-## -----------------------------------------------------------------------------
-contaminate(5000, 20, .01, 1)
+## ----fig.width=5, fig.asp=.8--------------------------------------------------
+as.one(shroud$y,shroud$er)
 
-## -----------------------------------------------------------------------------
-contaminate(66e6, 1e6, .005, 1, F14C.er=0.01)
+## ----fig.width=5, fig.asp=.8--------------------------------------------------
+as.bin(shroud$y,shroud$er, 50, 10)
+
+## ----fig.width=5, fig.asp=.8--------------------------------------------------
+spread(shroud$y,shroud$er)
+
+## ----fig.width=5, fig.asp=.8--------------------------------------------------
+contaminate(5000, 20, 10, 1)
+
+## ----fig.width=5, fig.asp=.8--------------------------------------------------
+contaminate(66e6, 1e6, 0.5)
+
+## ----fig.width=5, fig.asp=.8--------------------------------------------------
+clean(9000, 100, percentage=10)
+
+## ----fig.width=5, fig.asp=.8--------------------------------------------------
+muck(591, BCADtoC14(40)[1], 1)
+
+## ----fig.width=5, fig.asp=.8--------------------------------------------------
+muck(591, BCADtoC14(40)[1], BCADtoF14C(1400)[1])
 
 ## ----fig.width=6, fig.asp=.8--------------------------------------------------
 real.14C <- seq(0, 50e3, length=200)
-contam <- seq(0, .1, length=101) # 0 to 10% contamination
+contam <- seq(0, 10, length=101) # 0 to 10% contamination
 contam.col <- rainbow(length(contam))
 plot(0, type="n", xlim=c(0, 55e3), xlab="real 14C age", ylim=range(real.14C), ylab="observed 14C age")
-for(i in 1:length(contam))
-  lines(real.14C, contaminate(real.14C, c(), contam[i], 1, decimals=5), col=contam.col[i])
-contam.legend <- seq(0, .1, length=6)
+for (i in 1:length(contam)) {
+  observed <- contaminate(real.14C, 0, contam[i], 1, decimals=5, talk=FALSE)
+  lines(real.14C, observed[,1], col = contam.col[i])
+}
+contam.legend <- seq(0, 10, length=6)
 contam.col <- rainbow(length(contam.legend)-1)
-text(50e3, contaminate(50e3, c(), contam.legend, 1), 
-  labels=contam.legend, col=contam.col, cex=.7, offset=0, adj=c(0,.8))
+text(50e3, contaminate(50e3, 0, contam.legend, 1, visualise=FALSE, talk=FALSE)[,1],
+  labels=contam.legend, cex=.7, offset=0, adj=c(0,.8))
 
 ## ----fig.width=6, fig.asp=.8--------------------------------------------------
 draw.contamination()
-
-## ----fig.width=6, fig.asp=.8--------------------------------------------------
-decontaminate(591, BCADtoC14(40)[1], 1)
-
-## ----fig.width=6, fig.asp=.8--------------------------------------------------
-decontaminate(591, BCADtoC14(40)[1], BCADtoF14C(1400)[1])
 
 ## -----------------------------------------------------------------------------
 Cs <- c(.02, .05, .03, .04) # carbon contents of each fraction
