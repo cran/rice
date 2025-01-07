@@ -1,3 +1,14 @@
+# rice 1.0.0
+* corrected a bug in `C14topMC` where errors were not calculated correctly.
+* caldist now always glues a postbomb curve to a prebomb if postbomb is not FALSE.
+* new functions `push.normal` and `push.gamma` to push a date to younger or older ages by adding/subtracting a normal resp. gamma distribution.
+* reservoir effect (deltaR, deltaSTD) options have been added to functions where this is relevant.
+* added more warnings to `calibrate` for very old dates.
+* calibrated distributions are now plotted more consistently between functions.
+* added uncertainty estimates to the `clean`, `contaminate` and `muck` functions, using Monte Carlo-based sampling.
+* Some of the `realm` functions translating to D14C space didn't handle multiple entries well. This should work correctly now.
+* `find.shells` and `map.shells` now deal better with missing mapping-related packages
+
 # rice 0.4.0
 * the `contaminate` function now also produces a plot, and more details of the calculations.
 * the `decontaminate` function has been renamed to `clean` and has been updated with clearer messages; it now removes contamination to calculate the true/target age. A plot is made, and calculation details are provided.

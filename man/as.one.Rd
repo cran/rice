@@ -9,6 +9,8 @@ as.one(
   er,
   cc = 1,
   postbomb = FALSE,
+  deltaR = 0,
+  deltaSTD = 0,
   is.F = FALSE,
   as.F = FALSE,
   thiscurve = NULL,
@@ -21,6 +23,7 @@ as.one(
   cc.dir = NULL,
   age.lim = c(),
   age.lab = c(),
+  d.lim = c(),
   calib.col = rgb(0, 0, 0, 0.2),
   one.col = rgb(0, 0, 1, 0.5),
   one.height = 4,
@@ -38,6 +41,10 @@ as.one(
 \item{cc}{Calibration curve to use. Defaults to IntCal20 (\code{cc=1}).}
 
 \item{postbomb}{Whether or not to use a postbomb curve. Required for negative radiocarbon ages.}
+
+\item{deltaR}{Age offset (e.g. for marine samples).}
+
+\item{deltaSTD}{Uncertainty of the age offset (1 standard deviation).}
 
 \item{is.F}{Set this to TRUE if the provided age and error are in the F14C realm.}
 
@@ -62,6 +69,8 @@ as.one(
 \item{age.lim}{Limits of the age axis. Calculated automatically by default.}
 
 \item{age.lab}{Label of the age axis. Defaults to cal BP or BC/AD.}
+
+\item{d.lim}{Limits of the depth/vertical axis. Calculated automatically by default.}
 
 \item{calib.col}{The colour of the individual calibrated ages. Defaults to semi-transparent grey.}
 

@@ -1,43 +1,62 @@
-
-# internal function to look for map data
-ocean.map <- function(S, W, N, E, scale=c(), ocean.col="aliceblue", land.col=rgb(0, 0.5, 0, 0.6)) {
-  # for large maps, rnaturalearth calls rnaturalearthhires, but since the latter is not a CRAN package, it'll have to be downloaded from github
-  if(length(scale) == 0)
-    if("rnaturalearthhires" %in% installed.packages())
-      world <- rnaturalearth::ne_countries(scale="large", returnclass="sf") else {
-        message("using a medium-scale map. If you prefer a higher-resolution map, please download rnaturalearthhires using the command\nremotes::install_github('ropensci/rnaturalearthhires')")
+ocean.map <- function(S, W, N, E, mapsize="large", ocean.col="aliceblue", land.col = rgb(0, 0.5, 0, 0.6)) {
+  # Check if useful libraries are installed
+  hiresmaps <- "rnaturalearthhires" %in% installed.packages() # TRUE or FALSE
+  rne <- requireNamespace("rnaturalearth", quietly = TRUE)
+  rnedata <- requireNamespace("rnaturalearthdata", quietly = TRUE)  
+  
+  if(!rne)
+    message("Using basic maps. For higher-resolution maps, please install the rnaturalearth R package:",
+      "install.packages(\"rnaturalearth\")")  
+  if(!rnedata)
+    message("Using basic maps. For higher-resolution maps, please install the rnaturalearthdata R package:",
+      "install.packages(\"rnaturalearthdata\")")  
+  if(mapsize=="large" && !hiresmaps) # rnaturalearthhires is nice but is not on CRAN
+      message("For detailed maps, install rnaturalearthhires from GitHub using these commands:\n",
+        "install.packages('devtools') # if devtools hasn't been installed already\n",
+        "devtools::install_github('ropensci/rnaturalearthhires')") 
+    
+  # Handle different scales and package availability
+  if(mapsize %in% c("medium", "small")) {
+    world <- if (rne) {
+      rnaturalearth::ne_countries(scale = mapsize, returnclass = "sf")
+    } else {
+        world <- st_as_sf(maps::map("world", fill = TRUE, plot = FALSE))
+    }
+  } else if(mapsize == "large") {
+    if(hiresmaps) {
+      world <- rnaturalearth::ne_countries(scale = "large", returnclass = "sf")
+    } else if(rnedata) {
+	    message("please install rnaturalearthhires from github:",
+	      "devtools::install_github(\"ropensci/rnaturalearthhires\")")
         world <- rnaturalearthdata::countries50
-      } else
-    if(scale == "small")
-      world <- rnaturalearth::ne_countries(scale="small", returnclass="sf") else
-      if(scale == "medium")
-        world <- rnaturalearthdata::countries50 else
-        if(scale == "large")
-          if(!"rnaturalearthhires" %in% installed.packages()) {
-            message("using a medium-scale map. If you prefer a higher-resolution map, please download rnaturalearthhires using the command\nremotes::install_github('ropensci/rnaturalearthhires')")
-            world <- rnaturalearthdata::countries50
-          } else
-              world <- rnaturalearth::ne_countries(scale="large", returnclass="sf")
-
-  # ggOceanMaps works well locally but checks cause problems
-  # p <- basemap( limits=c(W, E, S, N), crs=4326, bathymetry=TRUE, bathy.alpha=0.5, legends=FALSE) +
-  #   coord_sf(xlim = c(W, E), ylim = c(S, N), crs = sf::st_crs(4326))
+    } else {
+	    message("please install rnaturalearthdata:",
+	      "install.packages(\"rnaturalearthdata\")")
+        world <- st_as_sf(maps::map("world", fill = TRUE, plot = FALSE))
+    }
+  }
 
   p <- ggplot(data = world) +
-    geom_sf(fill= land.col) +
+    geom_sf(fill = land.col) +
     coord_sf(xlim = c(W, E), ylim = c(S, N), expand = TRUE) +
-    theme(panel.grid.major = element_line(color = rgb(0,0,0,.5), linetype = 2, size = 0.1),
-      panel.background = element_rect(fill = ocean.col),
-      legend.background = element_rect(fill = "transparent"),
-      legend.key = element_rect(fill = "transparent")  # Set legend key background to transparent
-  )
-  return(p)
+      theme(
+        panel.grid.major = element_line(color = rgb(0, 0, 0, 0.5), linetype = 2, size = 0.1),
+        panel.background = element_rect(fill = ocean.col),
+        legend.background = element_rect(fill = "transparent"),
+        legend.key = element_rect(fill = "transparent")
+      )
+
+  return(p)	
 }
+
 
 
 #' @name find.shells
 #' @title Find nearby shell-derived dR values
 #' @description Find the shells closest to a chosen coordinate, and plot the dR values and feeding ecology. Uses the marine database downloaded (30 Aug 2024) from calib.org/marine. See Reimer PJ, Reimer RW, 2001. A marine reservoir correction database and on-line interface. Radiocarbon 43:461-3.
+#' @details
+#' This function uses the `rnaturalearth` package for country maps. If the high-resolution maps are desired,
+#' the `rnaturalearthhires` package must be installed from GitHub.
 #' @return A dataset with the n nearest dR values, and a plot of their coordinates.
 #' @param longitude Longitude of the point. Can only deal with one point at a time.
 #' @param latitude Latitude of the point. Can only deal with one point at a time.
@@ -45,7 +64,7 @@ ocean.map <- function(S, W, N, E, scale=c(), ocean.col="aliceblue", land.col=rgb
 #' @param colour The variable to be plotted as colour. Expects a continuous variable. Defaults to 'dR'.
 #' @param rainbow Whether or not to use a rainbow scale to plot the variable.
 #' @param size Size of the symbols. Defaults to 2.
-#' @param scale Resolution of the map. Can be "small", "medium" or "large". If the latter, a high-resolution dataset will have to be downloaded using the R package 'rnaturalearthhires'. Since this package is not on CRAN, you will have to download it yourself. Defaults to 'medium' if 'rnaturalearthhires' is not installed, and to 'high' if it is installed.
+#' @param mapsize Resolution of the map. Can be "small", "medium" or "large". If the latter, a high-resolution dataset will have to be downloaded using the R package 'rnaturalearthhires'. Since this package is on github but not on CRAN, you will have to download it yourself (using the command devtools::install_github("ropensci/rnaturalearthhires")). Defaults to 'medium' if 'rnaturalearthhires' is not installed, and to 'high' if it is installed.
 #' @param mincol Colour for minimum values.
 #' @param maxcol Colour for maximum values.
 #' @param symbol The variable to be plotted as symbol. Expects a categoric variable. Defaults to 'feeding'.
@@ -53,10 +72,11 @@ ocean.map <- function(S, W, N, E, scale=c(), ocean.col="aliceblue", land.col=rgb
 #' @param ocean.col Colour for the oceans. Defaults to \code{ocean.col="aliceblue"}.
 #' @param land.col Colour for the land. Defaults to semi-transparent darkgreen: \code{land.col=rgb(0, 0.5, 0, 0.6)}.
 #' @examples
-#'   N_UK <- map.shells(53, -11, 60, 2, scale="medium")
-#'   mean(N_UK$dR)
+#'   UK <- find.shells(0, 55, mapsize="medium")
+#'   mean(UK$dR)
+#'   Caribbean <- find.shells(-70, 20, 30, mapsize="medium")
 #' @export
-find.shells <- function(longitude, latitude, nearest=50, colour='dR', rainbow=FALSE, size=2, scale=c(), mincol="yellow", maxcol="red", symbol='feeding', symbol.legend=TRUE, ocean.col="aliceblue", land.col=rgb(0, 0.5, 0., 0.6)) {
+find.shells <- function(longitude, latitude, nearest=50, colour='dR', rainbow=FALSE, size=2, mapsize="large", mincol="yellow", maxcol="red", symbol='feeding', symbol.legend=TRUE, ocean.col="aliceblue", land.col=rgb(0, 0.5, 0., 0.6)) {
   lon <- lat <- NULL # to get rid of subsequent ggplot2-related warnings
   if(length(c(longitude,latitude)) != 2)
     stop("we need 1 entry for longitude, 1 for latitude")
@@ -94,26 +114,40 @@ find.shells <- function(longitude, latitude, nearest=50, colour='dR', rainbow=FA
   xmid <- longitude
   ymid <- latitude
 
-  p <- ocean.map(S, W, N, E, scale, ocean.col, land.col)
+  p <- ocean.map(S, W, N, E, mapsize, ocean.col, land.col)
+  
+  if(length(p) == 0) { # then rnaturalearth is not installed, so we plot a basic map instead
+	padding <- 1 
+  	maps::map(xlim=c(W-padding, E+padding), ylim=c(S-padding, N+padding), fill = TRUE, col = land.col, bg = ocean.col)
+	color_scale <- grDevices::colorRampPalette(c("yellow", "red"))(100)
+	cols <- color_scale[as.numeric(cut(nearshells[,5], breaks = 100))]
+	points(nearshells[,1], nearshells[,2], col=cols, pch=20)
+  } else {
 
-  if(symbol.legend)
-    p <- p +
-      geom_point(data=nearshells, aes(x=lon, y=lat, color=!!sym(colour), shape=!!sym(symbol)), size=size, alpha=.8) else
-        p <- p +
-          geom_point(data=nearshells, aes(x=lon, y=lat, color=!!sym(colour)), size=size, alpha=.8)
+    if(symbol.legend)
+      p <- p +
+        geom_point(data=nearshells, aes(x=lon, y=lat, color=!!sym(colour), shape=!!sym(symbol)), size=size, alpha=.8) else
+          p <- p +
+            geom_point(data=nearshells, aes(x=lon, y=lat, color=!!sym(colour)), size=size, alpha=.8)
 
-  if(rainbow)
-    p <- p + scale_color_gradientn(colors = rainbow(7)) + labs(shape="feeding") else
-      p <- p + scale_color_gradient(low=mincol, high=maxcol) + labs(shape="feeding")
+    if(rainbow)
+      p <- p + scale_color_gradientn(colors = rainbow(7)) + labs(shape="feeding") else
+        p <- p + scale_color_gradient(low=mincol, high=maxcol) + labs(shape="feeding")
 
-  print(p)
+    print(p)
+  }
+
   return(nearshells)
 }
+
 
 
 #' @name map.shells
 #' @title Plot regional shell-derived dR values
 #' @description Find the shells that fit within a rectangular region (bounded by N, E, S and W), and plot the dR values and feeding ecology. Uses the marine database downloaded (30 Aug 2024) from calib.org/marine. See Reimer PJ, Reimer RW, 2001. A marine reservoir correction database and on-line interface. Radiocarbon 43:461-3. Expects the coordinates for the map to be provided (starting south, then clockwise as with R axes).
+#' @details
+#' This function uses the `rnaturalearth` package for country maps. If the high-resolution maps are desired,
+#' the `rnaturalearthhires` package must be installed from GitHub.
 #' @return A plot and the relevant dR values.
 #' @param S The southern limit of the rectangular region.
 #' @param W The western limit of the rectangular region.
@@ -122,7 +156,7 @@ find.shells <- function(longitude, latitude, nearest=50, colour='dR', rainbow=FA
 #' @param colour The variable to be plotted as colour. Expects a continuous variable. Defaults to 'dR'.
 #' @param rainbow Whether or not to use a rainbow scale to plot the variable.
 #' @param size Size of the symbols. Defaults to 2.
-#' @param scale Resolution of the map. Can be "small", "medium" or "large". If the latter, a high-resolution dataset will have to be downloaded using the R package 'rnaturalearthhires'. Since this package is not on CRAN, you will have to download it yourself. Defaults to 'medium' if 'rnaturalearthhires' is not installed, and to 'high' if it is installed.
+#' @param mapsize Resolution of the map. Can be "small", "medium" or "large". If the latter, a high-resolution dataset will have to be downloaded using the R package 'rnaturalearthhires'. Since this package is on github but not on CRAN, you will have to download it yourself (using the command devtools::install_github("ropensci/rnaturalearthhires")). Defaults to 'medium' if 'rnaturalearthhires' is not installed, and to 'high' if it is installed.
 #' @param mincol Colour for minimum values.
 #' @param maxcol Colour for maximum values.
 #' @param symbol The variable to be plotted as symbol. Expects a categoric variable. Defaults to 'feeding'. 
@@ -130,16 +164,24 @@ find.shells <- function(longitude, latitude, nearest=50, colour='dR', rainbow=FA
 #' @param ocean.col Colour for the oceans. Defaults to \code{ocean.col="aliceblue"}.
 #' @param land.col Colour for the land. Defaults to semi-transparent darkgreen: \code{land.col=rgb(0, 0.5, 0, 0.6)}.
 #' @examples
-#'  N_UK <- map.shells(53, -11, 60, 2, scale="medium")
+#'  N_UK <- map.shells(53, -11, 60, 2, mapsize="medium")
 #'  mean(N_UK$dR)
 #' @export
-map.shells <- function(S=48,W=-15, N=62, E=5, colour='dR', rainbow=FALSE, size=2, scale=c(), mincol="yellow", maxcol="red", symbol='feeding', symbol.legend=TRUE, ocean.col="aliceblue", land.col=rgb(0, 0.5, 0., 0.6)) {
+map.shells <- function(S=48,W=-15, N=62, E=5, colour='dR', rainbow=FALSE, size=2, mapsize="large", mincol="yellow", maxcol="red", symbol='feeding', symbol.legend=TRUE, ocean.col="aliceblue", land.col=rgb(0, 0.5, 0., 0.6)) {
   lon <- lat <- NULL # to get rid of subsequent ggplot2-related warnings
   shells <- get("shells", envir = .GlobalEnv)
   shells[[symbol]] <- as.factor(shells[[symbol]])
   sel <- shells[shells$lon>=W & shells$lon<=E & shells$lat>=S & shells$lat <= N,]
 
-  p <- ocean.map(S, W, N, E, scale, ocean.col, land.col)
+  p <- ocean.map(S, W, N, E, mapsize, ocean.col, land.col)
+
+  if(length(p) == 0) { # then rnaturalearth is not installed, so we plot a basic map instead
+	padding <- 1 
+  	maps::map(xlim=c(W-padding, E+padding), ylim=c(S-padding, N+padding), fill = TRUE, col = land.col, bg = ocean.col)
+	color_scale <- grDevices::colorRampPalette(c("yellow", "red"))(100)
+	cols <- color_scale[as.numeric(cut(sel[,5], breaks = 100))]  # Assign colors based on the value
+	points(sel[,1], sel[,2], col=cols, pch=20)
+  } else {
 
   if(symbol.legend) 
     p <- p +
@@ -151,7 +193,9 @@ map.shells <- function(S=48,W=-15, N=62, E=5, colour='dR', rainbow=FALSE, size=2
     p <- p + scale_color_gradientn(colors = rainbow(7)) + labs(shape="feeding") else
       p <- p + scale_color_gradient(low=mincol, high=maxcol) + labs(shape="feeding")
 
-  print(p)
+    print(p)
+  } 
+  
   return(sel)
 }  
 
@@ -166,7 +210,7 @@ map.shells <- function(S=48,W=-15, N=62, E=5, colour='dR', rainbow=FALSE, size=2
 #' @param round Rounding to be applied (defaults to 1 decimal).
 #' @param talk Report details of the found values.
 #' @examples
-#'   N_UK <- map.shells(53, -11, 60, 2, scale="medium")
+#'   N_UK <- map.shells(53, -11, 60, 2, mapsize="medium")
 #'   weighted_means(N_UK$dR, N_UK$dSTD)
 #' @export
 weighted_means <- function(y, er, round=1, talk=TRUE) {
@@ -206,7 +250,7 @@ weighted_means <- function(y, er, round=1, talk=TRUE) {
 #' @param lty.mn Line type for the weighted mean. Defaults to dashed, \code{lty.mn=2}.
 #' @param col.sd Colour of the rectangle of the error. Defaults to transparent grey, \code{col.sd=rgb(0,0,0,.1)}.
 #' @examples
-#'  N_UK <- map.shells(53, -11, 60, 2, scale="medium")
+#'  N_UK <- map.shells(53, -11, 60, 2, mapsize="medium")
 #'  shells.mean(N_UK)
 #'  nearby <- find.shells(0,56,20) # somewhere in Scotland
 #'  shells.mean(nearby, distance=TRUE) # distance matters

@@ -11,7 +11,7 @@ find.shells(
   colour = "dR",
   rainbow = FALSE,
   size = 2,
-  scale = c(),
+  mapsize = "large",
   mincol = "yellow",
   maxcol = "red",
   symbol = "feeding",
@@ -33,7 +33,7 @@ find.shells(
 
 \item{size}{Size of the symbols. Defaults to 2.}
 
-\item{scale}{Resolution of the map. Can be "small", "medium" or "large". If the latter, a high-resolution dataset will have to be downloaded using the R package 'rnaturalearthhires'. Since this package is not on CRAN, you will have to download it yourself. Defaults to 'medium' if 'rnaturalearthhires' is not installed, and to 'high' if it is installed.}
+\item{mapsize}{Resolution of the map. Can be "small", "medium" or "large". If the latter, a high-resolution dataset will have to be downloaded using the R package 'rnaturalearthhires'. Since this package is on github but not on CRAN, you will have to download it yourself (using the command devtools::install_github("ropensci/rnaturalearthhires")). Defaults to 'medium' if 'rnaturalearthhires' is not installed, and to 'high' if it is installed.}
 
 \item{mincol}{Colour for minimum values.}
 
@@ -53,7 +53,12 @@ A dataset with the n nearest dR values, and a plot of their coordinates.
 \description{
 Find the shells closest to a chosen coordinate, and plot the dR values and feeding ecology. Uses the marine database downloaded (30 Aug 2024) from calib.org/marine. See Reimer PJ, Reimer RW, 2001. A marine reservoir correction database and on-line interface. Radiocarbon 43:461-3.
 }
+\details{
+This function uses the `rnaturalearth` package for country maps. If the high-resolution maps are desired,
+the `rnaturalearthhires` package must be installed from GitHub.
+}
 \examples{
-  N_UK <- map.shells(53, -11, 60, 2, scale="medium")
-  mean(N_UK$dR)
+  UK <- find.shells(0, 55, mapsize="medium")
+  mean(UK$dR)
+  Caribbean <- find.shells(-70, 20, 30, mapsize="medium")
 }

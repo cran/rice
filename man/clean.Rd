@@ -8,12 +8,19 @@ clean(
   y,
   er = 0,
   percentage,
+  percentage.error = 0,
   F.contam = 1,
-  contam.er = 0,
+  F.contam.er = 0,
+  MC = TRUE,
+  its = 10000,
+  roundby = 1,
   decimals = 5,
   visualise = TRUE,
   talk = TRUE,
-  true.col = "black",
+  eq.x = 5,
+  eq.y = c(),
+  eq.size = 0.75,
+  true.col = "darkgreen",
   observed.col = "blue",
   contamination.col = "red",
   true.pch = 20,
@@ -27,15 +34,23 @@ clean(
 )
 }
 \arguments{
-\item{y}{the observed radiocarbon age}
+\item{y}{The observed radiocarbon age}
 
-\item{er}{the error of the observed radiocarbon age}
+\item{er}{The error of the observed radiocarbon age}
 
 \item{percentage}{Relative amount of contamination. Must be between 0 and 100 (\%)}
 
-\item{F.contam}{the F14C of the contamination. Set at 1 for carbon of modern radiocarbon age, at 0 for 14C-free carbon, or anywhere inbetween.}
+\item{percentage.error}{Uncertainty of the contamination. Assumed to be normally distributed (which fails close to 0\% or 100\% contamination levels). Defaults to 0\%.}
 
-\item{contam.er}{error of the contamination. Defaults to 0.}
+\item{F.contam}{The F14C of the contamination. Set at 1 for carbon of modern radiocarbon age, at 0 for 14C-free carbon, or anywhere inbetween.}
+
+\item{F.contam.er}{The error of the contamination. Defaults to 0.}
+
+\item{MC}{Whether or not to use Monte Carlo iterations to estimate the values. Defaults to TRUE, because it treats uncertainties better than if set to FALSE.}
+
+\item{its}{Amount of iterations to use if MC=TRUE. Defaults to 10,000.}
+
+\item{roundby}{Rounding of the output for C14 ages. Defaults to 1 decimal.}
 
 \item{decimals}{Rounding of the output. Since details matter here, the default is to provide 5 decimals.}
 
@@ -43,7 +58,13 @@ clean(
 
 \item{talk}{Whether or not to report the calculations made. Defaults to \code{talk=TRUE}.}
 
-\item{true.col}{Colour for the true/target values. Defaults to black.}
+\item{eq.x}{Leftmost location of the equation. Defaults to \code{eq.x=5}. Can be set to values outside of (0,100) to make the equation invisible.}
+
+\item{eq.y}{Vertical location of the equation. Defaults to the top of the graph.}
+
+\item{eq.size}{Size of the font of the equation. In case the equation gets jumbled up upon resizing of a graphical device, just issue the previous `clean` command again. Defaults to \code{eq.size=0.8}.}
+
+\item{true.col}{Colour for the target/true values. Defaults to "darkgreen".}
 
 \item{observed.col}{Colour for the observed values. Defaults to blue.}
 
@@ -71,8 +92,14 @@ The true/target radiocarbon age and error
 \description{
 Given an observed radiocarbon age, remove the impact of contamination (for example, 1\% contamination with modern carbon) to estimate the true/target age
 }
+\details{
+Whereas the function takes C14 ages and percentage contamination as input, internal calculations are done in the F14C realm and using fractions (between 0 and 1). The central calculation is `F_true = ((1-frac)*F_obs) - (frac*F_contam)`, where `F_true` is the true or target age in F14C, `frac` is the fraction of contamination, `F_obs` is the F14C of the observed C14 age, and `F_contam` is the F activity of the contamination. In some extreme cases, the calculations will spit out unexpected results. Messages will be provided in most of these cases.
+}
 \examples{
-clean(5000, 20, 1, 1) # 1\% contamination with modern carbon
+# 1\% contamination with modern carbon (no uncertainties in contamination's percentage or F)
+clean(5000, 20, 1, 0, 1, 0)
+# now with errors:
+clean(5000, 20, 1, 0.1, 1, 0.1)
 }
 \author{
 Maarten Blaauw

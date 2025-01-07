@@ -10,6 +10,8 @@ draw.dates(
   depth = c(),
   cc = 1,
   postbomb = FALSE,
+  deltaR = 0,
+  deltaSTD = 0,
   thiscurve = c(),
   oncurve = FALSE,
   realm = "C",
@@ -21,13 +23,13 @@ draw.dates(
   threshold = 0.001,
   BCAD = FALSE,
   draw.hpd = TRUE,
-  hpd.lwd = 2,
+  hpd.border = NA,
   hpd.col = rgb(0, 0, 1, 0.7),
   cal.hpd.col = rgb(0, 0.5, 0.5, 0.35),
   rounded = 0.1,
   every = 1,
   mirror = TRUE,
-  up = FALSE,
+  up = TRUE,
   draw.base = TRUE,
   col = rgb(0, 0, 1, 0.3),
   border = rgb(0, 0, 1, 0.5),
@@ -36,8 +38,10 @@ draw.dates(
   add = FALSE,
   ka = FALSE,
   rotate.axes = FALSE,
-  ex = 1,
+  ex = 0.8,
   normalise = TRUE,
+  cc.col = rgb(0, 0.5, 0, 0.5),
+  cc.border = rgb(0, 0.5, 0, 0.5),
   cc.resample = 5,
   age.lab = c(),
   age.lim = c(),
@@ -69,6 +73,10 @@ draw.dates(
 
 \item{postbomb}{Whether or not this is a postbomb age. Defaults to FALSE.}
 
+\item{deltaR}{Age offset (e.g. for marine samples). Can also be provided as option 'reservoir'.}
+
+\item{deltaSTD}{Uncertainty of the age offset (1 standard deviation). Can also be provided within option 'reservoir'.}
+
 \item{thiscurve}{As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). Defaults to c().}
 
 \item{oncurve}{Whether or not to plot the calibration curve and then plot the dates onto this curve. Defaults to FALSE.}
@@ -91,7 +99,7 @@ draw.dates(
 
 \item{draw.hpd}{Whether or not to draw the hpd ranges as a line}
 
-\item{hpd.lwd}{Width of the line of the hpd ranges}
+\item{hpd.border}{Colour of the border of the hpd intervals. Not drawn by default.}
 
 \item{hpd.col}{Colour of the hpd rectangle for all dates or radiocarbon dates}
 
@@ -103,7 +111,7 @@ draw.dates(
 
 \item{mirror}{Plot distributions mirrored, a bit like a swan. Confuses some people but looks nice to the author so is the default.}
 
-\item{up}{If mirror is set to FALSE, the distribution can be plotted up or down, depending on the direction of the axis.}
+\item{up}{If mirror is set to FALSE, the distribution can be plotted facing upwards or downwards.}
 
 \item{draw.base}{By default, the base of the calibrated distributions is plotted. This can be avoided by supplying \code{draw.base=FALSE} as an option.}
 
@@ -124,6 +132,10 @@ draw.dates(
 \item{ex}{Exaggeration of the height of the distribution, defaults to \code{ex=1}.}
 
 \item{normalise}{If TRUE, the age distributions are normalised by plotting each distribution with the same total area. Precise dates will therefore peak higher than less precise dates (default). If \code{normalise=FALSE}, the peak of each date will be drawn at the same height.}
+
+\item{cc.col}{Colour of the calibration curve. Default semi-transparent darkgreen.}
+
+\item{cc.border}{Colour of the edges of the calibration curve. Default semi-transparent darkgreen.}
 
 \item{cc.resample}{The IntCal20 curves have different densities (every year between 0 and 5 kcal BP, then every 5 yr up to 15 kcal BP, then every 10 yr up to 25 kcal BP, and then every 20 yr up to 55 kcal BP). If calibrated ages span these density ranges, their drawn heights can differ, as can their total areas (which should ideally all sum to the same size). To account for this, resample to a constant time-span, using, e.g., \code{cc.resample=5} for 5-yr timespans.}
 
@@ -175,6 +187,7 @@ Add individual or multiple calibrated dates to a plot.
   y <- approx(cc[,1], cc[,2], x)$y # find the IntCal 14C ages
   er <- .01 * y
   draw.dates(y, er, 1:length(x))
+  # or draw on the calibration curve
   draw.dates(y, er, y, d.lab="Radiocarbon age (BP)")
   draw.ccurve(add=TRUE, cc1.col=rgb(0,.5,0,.5))
 }

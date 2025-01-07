@@ -1,8 +1,8 @@
 ## ----eval=FALSE---------------------------------------------------------------
-#  install.packages('rice')
+# install.packages('rice')
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  update.packages()
+# update.packages()
 
 ## -----------------------------------------------------------------------------
 library(rice)
@@ -15,6 +15,15 @@ draw.ccurve(1000, 2020, BCAD=TRUE, cc2='marine20', add.yaxis=TRUE)
 
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
 draw.ccurve(1600, 1950, BCAD=TRUE)
+
+## -----------------------------------------------------------------------------
+BCADtoC14(1694) 
+C14toBCAD(129)
+
+## ----fig.width=4, fig.asp=.8--------------------------------------------------
+draw.ccurve(1600, 1950, BCAD=TRUE)
+abline(h=BCADtoC14(1694)[1], lty=3) 
+abline(v=C14toBCAD(129), lty=3)
 
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
 draw.ccurve(1600, 2020, BCAD=TRUE, cc2='nh1')
@@ -39,13 +48,13 @@ D14CtoF14C(152, t=4000)
 F14CtoD14C(0.71, t=4000)
 
 ## -----------------------------------------------------------------------------
-C14toD14C(0.71, t=4000)
-D14CtoC14(152, t=4000)
+C14toD14C(152, t=4000)
+D14CtoC14(592, t=4000)
 
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
 x <- seq(0, 55e3, length=1e3)
 cc <- calBPtoC14(x)
-Dcc <- calBPtoD14C(x)
+Dcc <- C14toD14C(cc[,1], cc[,2], x)
 
 par(mar=c(4,3,1,3), bty="l")
 plot(x/1e3, Dcc[,1]+Dcc[,2], type="l", xlab="kcal BP", ylab="")
@@ -65,29 +74,40 @@ pool(shroud$y,shroud$er)
 Zu <- grep("ETH", shroud$ID) # Zurich lab only
 pool(shroud$y[Zu],shroud$er[Zu])
 
+## -----------------------------------------------------------------------------
+weighted_means(shroud$y[Zu],shroud$er[Zu])
+
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
 as.one(shroud$y,shroud$er)
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
-as.bin(shroud$y,shroud$er, 50, 10)
+as.bin(shroud$y,shroud$er, 100, move.by=25)
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
 spread(shroud$y,shroud$er)
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
-contaminate(5000, 20, 10, 1)
+y <- c(3820, 4590-90) 
+er <- c(40, sqrt(40^2 + 25^2)) 
+cc <- c(1,2)
+overlap(y, er, cc=cc)
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
-contaminate(66e6, 1e6, 0.5)
+contaminate(5000, 20, 10, 0, 1)
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
-clean(9000, 100, percentage=10)
+contaminate(66e6, 1e6, 0.5, 0.1, 1)
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
-muck(591, BCADtoC14(40)[1], 1)
+clean(9000, 100, 10)
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
-muck(591, BCADtoC14(40)[1], BCADtoF14C(1400)[1])
+muck(591, 30, BCADtoC14(40)[,1], 0, 1)
+
+## ----fig.width=5, fig.asp=.8--------------------------------------------------
+perFaith <- BCADtoC14(40)
+repairF <- BCADtoF14C(1400)
+muck(591, 30, perFaith[,1], perFaith[,2], repairF[,1], repairF[,2])
 
 ## ----fig.width=6, fig.asp=.8--------------------------------------------------
 real.14C <- seq(0, 50e3, length=200)
@@ -95,13 +115,9 @@ contam <- seq(0, 10, length=101) # 0 to 10% contamination
 contam.col <- rainbow(length(contam))
 plot(0, type="n", xlim=c(0, 55e3), xlab="real 14C age", ylim=range(real.14C), ylab="observed 14C age")
 for (i in 1:length(contam)) {
-  observed <- contaminate(real.14C, 0, contam[i], 1, decimals=5, talk=FALSE)
+  observed <- contaminate(real.14C, 0, contam[i], 0, 1, decimals=5, talk=FALSE, MC=FALSE)
   lines(real.14C, observed[,1], col = contam.col[i])
 }
-contam.legend <- seq(0, 10, length=6)
-contam.col <- rainbow(length(contam.legend)-1)
-text(50e3, contaminate(50e3, 0, contam.legend, 1, visualise=FALSE, talk=FALSE)[,1],
-  labels=contam.legend, cex=.7, offset=0, adj=c(0,.8))
 
 ## ----fig.width=6, fig.asp=.8--------------------------------------------------
 draw.contamination()
@@ -120,6 +136,11 @@ plot(calib.130, type="l")
 ## -----------------------------------------------------------------------------
 l.calib(145, 130, 10)
 
+## ----fig.width=4, fig.asp=.8--------------------------------------------------
+dice <- r.calib(100, 130, 10)
+plot(density(dice))
+rug(dice)
+
 ## -----------------------------------------------------------------------------
 hpd(calib.130)
 
@@ -131,11 +152,11 @@ points.2450
 abline(v=points.2450, col=1:4, lty=2)
 
 ## ----fig.width=5, fig.asp=1---------------------------------------------------
-calibrate(2450, 20)
+calibrate(2450, 40)
 
 ## ----fig.width=5, fig.asp=1---------------------------------------------------
 mycurve <- smooth.ccurve(smooth=50)
-calibrate(2450, 20, thiscurve=mycurve)
+calibrate(2450, 40, thiscurve=mycurve)
 
 ## ----fig.width=5, fig.asp=1---------------------------------------------------
 try(calibrate(130,30))
@@ -144,6 +165,12 @@ calibrate(130, 30, bombalert=FALSE)
 ## -----------------------------------------------------------------------------
 younger(150, 130, 10)
 older(150, 130, 10)
+
+## -----------------------------------------------------------------------------
+p.range(300, 150, 130, 10)
+
+## ----fig.width=5, fig.asp=1---------------------------------------------------
+push.normal(2450,40, 400,20)
 
 ## ----fig.width=5, fig.asp=1---------------------------------------------------
 myshells <- map.shells(S=54, W=-8, N=61, E=0) # the northern part of the UK
@@ -165,13 +192,13 @@ my.labels <- c("my", "very", "own", "simulated", "dates")
 draw.dates(dates, errors, depths, BCAD=TRUE, labels=my.labels, age.lim=c(0, 1800))
 
 ## ----fig.width=4, fig.asp=1---------------------------------------------------
-plot(300*1:5, 5:1, xlim=c(0, 1800), ylim=c(5,0), xlab="AD", ylab="dates")
+plot(250*1:5, 5:1, xlim=c(0, 1800), ylim=c(5,0), xlab="AD", ylab="dates")
 draw.dates(dates, errors, depths, BCAD=TRUE, add=TRUE, labels=my.labels, mirror=FALSE)
 
 ## ----fig.width=4, fig.asp=1---------------------------------------------------
 par(bg="black", mar=rep(1, 4))
 n <- 50; set.seed(1)
-draw.dates(rnorm(n, 2450, 30), rep(25, n), n:1,
+draw.dates(rnorm(n, 2450, 30), rep(25, n), 1:n,
   mirror=FALSE, draw.base=FALSE, draw.hpd=FALSE, col="white",
-  threshold=1e-28, age.lim=c(2250, 2800), ex=.8)
+  threshold=1e-28, age.lim=c(2250, 2800), up=TRUE, ex=-20)
 
