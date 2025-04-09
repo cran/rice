@@ -9,9 +9,11 @@ hpd(
   prob = 0.95,
   return.raw = FALSE,
   BCAD = FALSE,
+  ka = FALSE,
   age.round = 0,
   prob.round = 1,
-  every = 0.1
+  every = 0.1,
+  bins = 20
 )
 }
 \arguments{
@@ -23,11 +25,15 @@ hpd(
 
 \item{BCAD}{Which calendar scale to use. Defaults to cal BP, \code{BCAD=FALSE}.}
 
+\item{ka}{Whether to report results in years (default) or as ka}
+
 \item{age.round}{Rounding for ages. Defaults to 0 decimals.}
 
 \item{prob.round}{Rounding for reported probabilities. Defaults to 1 decimal.}
 
 \item{every}{Yearly precision (defaults to 0.1, as a compromise between speed and accuracy).}
+
+\item{bins}{The number of bins required. Any distribution with fewer bins gets recalculated using 100 narrower bins.}
 }
 \value{
 The highest posterior density ranges, as three columns: from age, to age, and the corresponding percentage(s) of the range(s)

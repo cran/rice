@@ -14,6 +14,7 @@ calib.t(
   deltaR = 0,
   deltaSTD = 0,
   as.F = FALSE,
+  is.F = FALSE,
   BCAD = FALSE,
   cc.dir = c(),
   normal.col = "red",
@@ -42,6 +43,8 @@ calib.t(
 \item{deltaSTD}{Uncertainty of the age offset (1 standard deviation).}
 
 \item{as.F}{Whether or not to calculate ages in the F14C realm. Defaults to \code{as.F=FALSE}, which uses the C14 realm.}
+
+\item{is.F}{Use this if the provided date is in the F14C realm.}
 
 \item{BCAD}{Which calendar scale to use. Defaults to cal BP, \code{BCAD=FALSE}.}
 

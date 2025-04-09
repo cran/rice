@@ -13,6 +13,7 @@ r.calib(
   deltaR = 0,
   deltaSTD = 0,
   as.F = FALSE,
+  is.F = FALSE,
   thiscurve = NULL,
   yrsteps = FALSE,
   cc.resample = FALSE,
@@ -43,6 +44,8 @@ r.calib(
 \item{deltaSTD}{Uncertainty of the age offset (1 standard deviation).}
 
 \item{as.F}{Whether or not to calculate ages in the F14C realm. Defaults to \code{as.F=FALSE}, which uses the C14 realm.}
+
+\item{is.F}{Use this if the provided date is in the F14C realm.}
 
 \item{thiscurve}{As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).}
 

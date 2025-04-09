@@ -1,3 +1,16 @@
+# rice 1.1.1
+* added a secondary y axis to the `contaminate`, `clean` and `muck` plots.
+* additional R packages for plotting maps are now only installed and loaded when required.
+* added the latest entries from the calib.org/marine database (2 April 2025). 
+* draw.dates now doesn't throw an error when ka=TRUE, and also works better when rotate.axes=TRUE.
+* hpd gains an option `bins` to provide the minimum number of bins in a distribution before hpds are calculated. Any distributions with fewer bins get recalculated using a narrower binsize (equating to 100 equally-spaced bins).
+* added a function `span` to calculate (calibrated) time-spans between two radiocarbon dates.
+* repaired a bug in C14tocalBP which caused NAs for some cal BP values.
+* a function `overlapping` calculates to what degree two calibrated dates are overlapping.
+* within the `realm`-related functions, changed the rounding procedure from `signif` to `round`. 
+* added a function `fromto` that translates values into different domains, and plots them.
+* calibrated distributions are now drawn in more consistent ways (e.g., direction up/down, height).
+
 # rice 1.0.0
 * corrected a bug in `C14topMC` where errors were not calculated correctly.
 * caldist now always glues a postbomb curve to a prebomb if postbomb is not FALSE.
@@ -7,7 +20,7 @@
 * calibrated distributions are now plotted more consistently between functions.
 * added uncertainty estimates to the `clean`, `contaminate` and `muck` functions, using Monte Carlo-based sampling.
 * Some of the `realm` functions translating to D14C space didn't handle multiple entries well. This should work correctly now.
-* `find.shells` and `map.shells` now deal better with missing mapping-related packages
+* `find.shells` and `map.shells` now deal better with missing mapping-related packages.
 
 # rice 0.4.0
 * the `contaminate` function now also produces a plot, and more details of the calculations.

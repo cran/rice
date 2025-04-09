@@ -49,16 +49,20 @@ fractions <- function(bulk_age, bulk_er, fractions_percC, fractions_weights, fra
 
 
 
-# internal plotting function
-plot_contamination <- function(true.F, true.er, obs.F, obs.er, perc, perc.er, contam.F, contam.er, ylim=c(), xlab="contamination (%)", true.col="darkgreen", observed.col="blue", contamination.col="red", true.pch=20, observed.pch=18, contamination.pch=17, true.name="target", ylab="F14C", bty="l") {
+# internal contamination plotting function
+plot_contamination <- function(true.F, true.er, obs.F, obs.er, perc, perc.er, contam.F, contam.er, ylim=c(), C14.axis=TRUE, xlab="contamination (%)", true.col="darkgreen", observed.col="blue", contamination.col="red", true.pch=20, observed.pch=18, contamination.pch=17, true.name="target", ylab="F14C", bty="u") {
+
   if(length(ylim) == 0)
     ylim <- sort(extendrange(c(obs.F, true.F, contam.F)))
-  plot(0, type="n", xlim=c(0, 100), ylim=ylim, xlab=xlab, ylab=ylab, bty=bty)
-  segments(-100, true.F, 0, true.F, lty=3, col=true.col) # horizontal to target
+  ylim[ylim < 0] <- 0 # F cannot be negative
+
+  op <- par(bty=bty, mar=c(5,4,4,4)) # hard-coded
+  plot(0, type="n", xlim=c(0, 100), ylim=ylim, xlab=xlab, ylab=ylab)
+  abline(h=true.F, lty=3, col=true.col) # horizontal to target
   segments(0, -1, 0, true.F, lty=3, col=true.col) # vertical to target
-  segments(-100, obs.F, perc, obs.F, lty=3, col=observed.col) # horizontal from observed
+  abline(h=obs.F, lty=3, col=observed.col) # horizontal from observed
   segments(perc, -1, perc, obs.F, lty=3, col=observed.col) # vertical from observed
-  segments(-100, contam.F, 100, contam.F, lty=3, col=2) # horizontal from contamination
+  abline(h=contam.F, lty=3, col=2) # horizontal from contamination
   segments(100, -1, 100, contam.F, lty=3, col=2) # vertical from contamination
   segments(0, true.F, 100, contam.F, lty=3, col=grey(0.5)) # the connecting line
 
@@ -76,6 +80,15 @@ plot_contamination <- function(true.F, true.er, obs.F, obs.er, perc, perc.er, co
   points(100, contam.F, col=contamination.col, pch=contamination.pch)
 
   legend("right", pch=c(true.pch, observed.pch, contamination.pch), col=c(true.col, observed.col, contamination.col), legend=c(true.name, "observed", "contamination"), bg=rgb(1,1,1,0.8), box.lty=0, cex=.7, xjust=0, yjust=0)
+
+  # want to add a secondary y axis?
+  if(C14.axis) {
+    C14.ticks <- F14CtoC14(pretty(ylim)) # find the C14 ages of the F tick marks
+    C14.ticks <- C14.ticks[!is.na(C14.ticks)]
+    C14.ticklocs <- c(C14toF14C(C14.ticks))
+    axis(4, C14.ticklocs, labels=round(C14.ticks,0))
+    mtext("C14", 4, 2.5)
+  }
 }
 
 
@@ -110,13 +123,14 @@ plot_contamination <- function(true.F, true.er, obs.F, obs.er, perc, perc.er, co
 #' @param xlab Name of the x-axis. Defaults to 'contamination (\%)'.
 #' @param ylab Name of the y-axis. Defaults to 'F14C'.
 #' @param ylim Limits of the y-axis. Calculated automatically by default.
-#' @param bty Draw a box around a box of a certain shape. Defaults to \code{bty="l"}.
+#' @param C14.axis Whether or not to draw a secondary vertical axis for C14 ages. Defaults to \code{C14.axis=TRUE}.
+#' @param bty Draw a box around a box of a certain shape. Defaults to \code{bty="u"}.
 #' @author Maarten Blaauw
 #' @examples
 #' contaminate(5000, 20, 1, 0, 1) # 1% contamination with modern carbon
 #' contaminate(66e6, 1e6, 1, 0, 1) # dino bone, shouldn't be dated as way beyond the dating limit
 #' @export
-contaminate <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.er=0, MC=TRUE, its=1e4, decimals=5, roundby=1, visualise=TRUE, talk=TRUE, eq.x=5, eq.y=c(), eq.size=0.75, true.col="darkgreen", observed.col="blue", contamination.col="red", true.pch=20, observed.pch=18, contamination.pch=17, true.name="true", xlab="contamination (%)", ylab="F14C", ylim=c(), bty="l") {
+contaminate <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.er=0, MC=TRUE, its=1e4, decimals=5, roundby=1, visualise=TRUE, talk=TRUE, eq.x=5, eq.y=c(), eq.size=0.75, true.col="darkgreen", observed.col="blue", contamination.col="red", true.pch=20, observed.pch=18, contamination.pch=17, true.name="true", xlab="contamination (%)", ylab="F14C", ylim=c(), C14.axis=TRUE, bty="u") {
   if(percentage < 0 || percentage > 100)
     stop("percentage should be between 0 and 100%", call.=FALSE) 
   if(F.contam < 0)
@@ -172,7 +186,7 @@ contaminate <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.c
         perc=percentage, perc.er=percentage.error, contam.F=F.contam, contam.er=F.contam.er,
         ylim=ylim, xlab=xlab, true.col=true.col, observed.col=observed.col,
         contamination.col=contamination.col, true.pch=true.pch, true.name=true.name,
-        observed.pch=observed.pch, contamination.pch=contamination.pch, ylab=ylab, bty=bty)
+        observed.pch=observed.pch, contamination.pch=contamination.pch, ylab=ylab, bty=bty, C14.axis=C14.axis)
       txt <- c("F_obs = ", "(", 1-fraction, "*", round(F.true[,1], decimals), ")", " + ", 
         "(", fraction, "*", round(F.contam, decimals), ")", " = ", round(F.obs, decimals), " (", 
         round(C14.obs[1], roundby), " +- ", round(C14.obs[2], roundby), " BP)")
@@ -230,7 +244,8 @@ contaminate <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.c
 #' @param xlab Name of the x-axis. Defaults to 'contamination (\%)'.
 #' @param ylab Name of the y-axis. Defaults to 'F14C'.
 #' @param ylim Limits of the y-axis. Calculated automatically by default.
-#' @param bty Draw a box around a box of a certain shape. Defaults to \code{bty="l"}.
+#' @param C14.axis Whether or not to draw a secondary vertical axis for C14 ages. Defaults to \code{C14.axis=TRUE}.
+#' @param bty Draw a box around a box of a certain shape. Defaults to \code{bty="u"}.
 #' @author Maarten Blaauw
 #' @examples
 #' # 1% contamination with modern carbon (no uncertainties in contamination's percentage or F)
@@ -238,7 +253,7 @@ contaminate <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.c
 #' # now with errors:
 #' clean(5000, 20, 1, 0.1, 1, 0.1)
 #' @export
-clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.er=0, MC=TRUE, its=1e4, roundby=1, decimals=5, visualise=TRUE, talk=TRUE, eq.x=5, eq.y=c(), eq.size=0.75, true.col="darkgreen", observed.col="blue", contamination.col="red", true.pch=20, observed.pch=18, contamination.pch=17, true.name="true", xlab="contamination (%)", ylab="F14C", ylim=c(), bty="l") {
+clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.er=0, MC=TRUE, its=1e4, roundby=1, decimals=5, visualise=TRUE, talk=TRUE, eq.x=5, eq.y=c(), eq.size=0.75, true.col="darkgreen", observed.col="blue", contamination.col="red", true.pch=20, observed.pch=18, contamination.pch=17, true.name="true", xlab="contamination (%)", ylab="F14C", ylim=c(), C14.axis=TRUE, bty="u") {
   if(length(y)>1)
     stop("cannot deal with more than one value at a time")
   if(percentage < 0 || percentage > 100)
@@ -297,7 +312,7 @@ clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.
         perc=percentage, perc.er=percentage.error, contam.F=F.contam, contam.er=F.contam.er,
         ylim=ylim, xlab=xlab, true.col=true.col, observed.col=observed.col,
         contamination.col=contamination.col, true.pch=true.pch, true.name=true.name,
-        observed.pch=observed.pch, contamination.pch=contamination.pch, ylab=ylab, bty=bty)
+        observed.pch=observed.pch, contamination.pch=contamination.pch, ylab=ylab, bty=bty, C14.axis=C14.axis)
       txt <- c("F_true = ", "(", 1-fraction, "*", round(F.obs[1], decimals), ")", " - ", 
         "(", fraction, "*", round(F.contam, decimals), ")", " = ", round(F.true, decimals), " (", C14.true[1], " +- ", C14.true[2], " BP)")
       colours <- c(true.col, rep(observed.col, 5), 1, rep(contamination.col, 5), rep(true.col, 7))
@@ -314,7 +329,7 @@ clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.
       message("Observed age as F14C: ", round(F.obs[1], decimals), " +- ", round(F.obs[2], decimals))
       message("True F14C: (", 1-fraction, "*", round(F.obs[1], decimals), ") - (", fraction, "*", round(F.contam, decimals), ") = ", round(F.true, decimals), " +- ", round(F.true.er, decimals))
       message("True C14 age: ", C14.true[1], " +- ", C14.true[2])
-    }	
+    }
   if(MC)
     invisible(list(obs=C14.true, F14C=c(mean=F.true, sd=F.true.er), samples=cbind(F.obs.samples, F.contam.samples, fraction.samples, F.true.samples))) else
       invisible(cbind(C14.true))
@@ -353,18 +368,24 @@ clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.
 #' @param xlab Name of the x-axis. Defaults to 'contamination (\%)'.
 #' @param ylab Name of the y-axis. Defaults to 'F14C'.
 #' @param ylim Limits of the y-axis. Calculated automatically by default.
-#' @param bty Draw a box around a box of a certain shape. Defaults to \code{bty="l"}.
+#' @param C14.axis Whether or not to draw a secondary vertical axis for C14 ages. Defaults to \code{C14.axis=TRUE}.
+#' @param bty Draw a box around a box of a certain shape. Defaults to \code{bty="u"}.
 #' @author Maarten Blaauw
 #' @examples
 #'   muck(600, 30, 2000, 0, 1, .01)
 #' @export
-muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.contam.er=0, MC=TRUE, its=1e4, roundby=1, decimals=3, visualise=TRUE, talk=TRUE, eq.x=5, eq.y=c(), eq.size=0.8, target.col="darkgreen", observed.col="blue", contamination.col="red", target.pch=20, observed.pch=18, contamination.pch=17, true.name="target", xlab="contamination (%)", ylab="F14C", ylim=c(), bty="l") {
+muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.contam.er=0, MC=TRUE, its=1e4, roundby=1, decimals=3, visualise=TRUE, talk=TRUE, eq.x=5, eq.y=c(), eq.size=0.8, target.col="darkgreen", observed.col="blue", contamination.col="red", target.pch=20, observed.pch=18, contamination.pch=17, true.name="target", xlab="contamination (%)", ylab="F14C", ylim=c(), C14.axis=TRUE, bty="u") {
   F.obs <- C14toF14C(y.obs, y.obs.er)
   F.target <- C14toF14C(y.target, y.target.er)
   if(F.target[1] == F.contam)
     message("when F.target = F.contam, weird things can happen")
 
   # sanity checks
+  init.results <- (F.obs[,1]-F.target[,1]) / (F.contam - F.target[,1])
+  if(init.results < 0)
+    message("(F.obs-F.target)/(F.contam-F.target) negative, contamination appears to be <0%!")
+  if(init.results > 1)
+    message("(F.obs-F.target) > (F.contam-F.target), these values result in >100% contamination!")
   if(all(F.contam > F.target[,1]) && all(F.obs[,1] < F.target[,1]))
     warning("The observed age (F.obs ", F.obs[,1], ") cannot be magicked into the younger target age (F.target ",
       F.target[,1], "), because the activity of the contamination (F.contam, ", F.contam, 
@@ -373,9 +394,9 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
     warning("The observed age (F.obs ", F.obs[,1], ") cannot be magicked into the older target age (F.target ",
       F.target[,1], "), because the activity of the contamination (F.contam, ", F.contam, 
       ") is lower than F.target.", call.=FALSE)
-
   if(any(F.contam < 0))
     stop("F.contam cannot be smaller than 0", call.=FALSE)
+
   if(MC) {
     if(all(y.obs.er == 0)) # then waste no time sampling
       F.observed.samples <- F.obs[1,1] else
@@ -388,7 +409,8 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
         F.contam.samples <- rnorm(its, F.contam, F.contam.er)
 
     frac <- ((F.observed.samples - F.target.samples) / (F.contam.samples - F.target.samples))
-    frac <- abs(frac) # to deal with cases such as F.obs>F.target, F.contam>F.target
+    if(any(frac < 0) || any(frac > 1))
+      message("Some strange results here... this muck is a mock")
 
     if(length(frac) < 10)
       stop("too few valid samples after filtering. Increase 'its'", call.=FALSE)
@@ -397,11 +419,10 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
     if(is.na(perc.sd)) # when all errors are 0, sd(0) becomes NA
       perc.sd <- 0
 
-    F.contam <- mean(F.contam.samples); cat(F.contam, "\n")
+    F.contam <- mean(F.contam.samples)
     F.contam.er <- sd(F.contam.samples)
     if(is.na(F.contam.er)) # when all errors are 0, sd(0) becomes NA
       F.contam.er <- 0
-
   } else {
       # note: these calculations do NOT take into account uncertainties
       frac <- ((F.obs[,1] - F.target[,1]) / (F.contam - F.target[,1]))
@@ -415,7 +436,7 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
         obs.er=F.obs[,2], perc=perc, perc.er=perc.sd, contam.F=F.contam, contam.er=F.contam.er,
         ylim=ylim, xlab=xlab, true.col=target.col, observed.col=observed.col,
         contamination.col=contamination.col, true.pch=target.pch, true.name=true.name,
-        observed.pch=observed.pch, contamination.pch=contamination.pch, ylab=ylab, bty=bty)
+        observed.pch=observed.pch, contamination.pch=contamination.pch, ylab=ylab, bty=bty, C14.axis=C14.axis)
       txt <- c("contamination", " = (", round(F.obs[,1], decimals), "-", 
         round(F.target[,1], decimals), ") / (",
         round(F.contam, decimals), "-",  round(F.target[,1], decimals), ") = ", 
@@ -428,7 +449,7 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
       for(i in seq_along(txt))
         text(x = xpos[i], y = eq.y, labels = txt[i], col = colours[i], adj = c(0, 0), cex=eq.size/.98)
     }
- 
+
   F.obs <- round(F.obs, decimals); F.target <- round(F.target, decimals)
   F.contam <- round(F.contam, decimals); perc <- round(perc, decimals)
 
@@ -443,6 +464,7 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
       if(perc>100)
         message("That's >100%, please check your values (is it a postbomb date?)")    
     }
+
   if(MC)
     invisible(list(perc=perc, samples=cbind(F.observed.samples, F.target.samples, F.contam.samples, frac))) else
       invisible(cbind(perc))
@@ -475,6 +497,7 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
 #' @param cal.lim Calendar axis limits. Calculated automatically by default.
 #' @param calib.col Colour of the calibrated distribution (defaults to semi-transparent light grey).
 #' @param pushed.col Colour of the pushed distribution (defaults to semi-transparent blue).
+#' @param heights Heights of the calibrated and 'pushed' distributions. Defaults to 0.3 of the device's height.
 #' @param inset Whether or not to plot an inset graph showing the shape of the normal/gamma distribution.
 #' @param inset.col Colour of the normal/gamma distribution.
 #' @param inset.loc Location of the inset graph.
@@ -483,7 +506,7 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
 #' @examples
 #'   push.normal(250, 25, 50, 10)
 #' @export
-push.normal <- function(y, er, mean, sdev, add=TRUE, n=1e6, prob=0.95, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, cc.dir=NULL, normal=TRUE, t.a=3, t.b=4, BCAD=FALSE, cal.lim=c(), calib.col=rgb(0,0,0,.25), pushed.col=rgb(0,0,1,.4), inset=TRUE, inset.col="darkgreen", inset.loc=c(0.6, 0.97, 0.6, 0.97), inset.mar=c(3, 0.5, 0.5, 0.5), inset.mgp=c(2,1,0)) {
+push.normal <- function(y, er, mean, sdev, add=TRUE, n=1e6, prob=0.95, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, cc.dir=NULL, normal=TRUE, t.a=3, t.b=4, BCAD=FALSE, cal.lim=c(), calib.col=rgb(0,0,0,.25), pushed.col=rgb(0,0,1,.4), heights=.3, inset=TRUE, inset.col="darkgreen", inset.loc=c(0.6, 0.97, 0.6, 0.97), inset.mar=c(3, 0.5, 0.5, 0.5), inset.mgp=c(2,1,0)) {
   if(length(y) != 1 || length(er) != 1)
     stop("Please provide one value for both y and er")
   if(length(mean) != 1 || length(sdev) != 1)
@@ -508,9 +531,9 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, n=1e6, prob=0.95, cc=1, pos
     if(!BCAD) cal.lim <- rev(cal.lim)
   }
   
-  plot(0, type="n", xlim=cal.lim, ylim=c(0, 1.5), bty="l", ylab="", yaxt="s", xlab=ifelse(BCAD, "BCAD", "cal BP"))
-  draw.dist(cbind(calib), dist.col=calib.col, dist.border=calib.col, y.pos=0, ex=-1)
-  hpds <- draw.dist(cbind(shifted$x, shifted$y), prob=prob, y.pos=0, ex=-1)
+  plot(0, type="n", xlim=cal.lim, ylim=c(0, 1.5), bty="l", ylab="", yaxt="s", xlab=ifelse(BCAD, "BC/AD", "cal BP"))
+  draw.dist(cbind(calib), dist.col=calib.col, dist.border=calib.col, y.pos=0, fraction=heights)
+  hpds <- draw.dist(cbind(shifted$x, shifted$y), prob=prob, y.pos=0, fraction=heights)
 
   # inset graph
   if(inset) {
@@ -546,6 +569,7 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, n=1e6, prob=0.95, cc=1, pos
 #' @param deltaSTD Uncertainty of the age offset (1 standard deviation).
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
+#' @param is.F Use this if the provided date is in the F14C realm.
 #' @param normal Use the normal distribution to calibrate dates (default TRUE). The alternative is to use the t model (Christen and Perez 2016).
 #' @param t.a Value a of the t distribution (defaults to 3).
 #' @param t.b Value b of the t distribution (defaults to 4).
@@ -553,6 +577,7 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, n=1e6, prob=0.95, cc=1, pos
 #' @param cal.lim Calendar axis limits. Calculated automatically by default.
 #' @param calib.col Colour of the calibrated distribution (defaults to semi-transparent light grey).
 #' @param pushed.col Colour of the pushed distribution (defaults to semi-transparent blue).
+#' @param heights Heights of the calibrated and 'pushed' distributions. Defaults to 0.3 of the device's height.
 #' @param inset Whether or not to plot an inset graph showing the shape of the normal/gamma distribution.
 #' @param inset.col Colour of the normal/gamma distribution.
 #' @param inset.loc Location of the inset graph.
@@ -561,7 +586,7 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, n=1e6, prob=0.95, cc=1, pos
 #' @examples
 #'   push.gamma(250, 25, 50, 2, add=FALSE) # subtract a gamma distribution
 #' @export
-push.gamma <- function(y, er, mean, shape, add=TRUE, n=1e6, prob=0.95, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, cc.dir=NULL, normal=TRUE, t.a=3, t.b=4, BCAD=FALSE, cal.lim=c(), calib.col=rgb(0,0,0,.25), pushed.col=rgb(0,0,1,.4), inset=TRUE, inset.col="darkgreen", inset.loc=c(0.6, 0.97, 0.6, 0.97), inset.mar=c(3, 0.5, 0.5, 0.5), inset.mgp=c(2,1,0)) {
+push.gamma <- function(y, er, mean, shape, add=TRUE, n=1e6, prob=0.95, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, cc.dir=NULL, is.F=FALSE, normal=TRUE, t.a=3, t.b=4, BCAD=FALSE, cal.lim=c(), calib.col=rgb(0,0,0,.25), pushed.col=rgb(0,0,1,.4), heights=0.3, inset=TRUE, inset.col="darkgreen", inset.loc=c(0.6, 0.97, 0.6, 0.97), inset.mar=c(3, 0.5, 0.5, 0.5), inset.mgp=c(2,1,0)) {
   if(length(y) != 1 || length(er) != 1)
     stop("Please provide one value for both y and er")
   if(length(mean) != 1 || length(shape) != 1)
@@ -571,8 +596,8 @@ push.gamma <- function(y, er, mean, shape, add=TRUE, n=1e6, prob=0.95, cc=1, pos
   er <- sqrt(er^2 + deltaSTD^2)
   
   shift <- rgamma(n, shape, shape/mean)
-  calib <- caldist(y, er, cc=cc, postbomb=postbomb, thiscurve=thiscurve, normalise=TRUE, BCAD=BCAD, cc.dir=cc.dir)
-  rcalib <- r.calib(n, y, er, cc=cc, postbomb=postbomb, thiscurve=thiscurve, normal=normal, t.a=t.a, t.b=t.b, normalise=TRUE, BCAD=BCAD, rule=2, cc.dir=cc.dir)
+  calib <- caldist(y, er, cc=cc, postbomb=postbomb, thiscurve=thiscurve, normalise=TRUE, BCAD=BCAD, cc.dir=cc.dir, is.F=is.F)
+  rcalib <- r.calib(n, y, er, cc=cc, postbomb=postbomb, thiscurve=thiscurve, normal=normal, t.a=t.a, t.b=t.b, normalise=TRUE, BCAD=BCAD, rule=2, cc.dir=cc.dir, is.F=is.F)
 
   if(add) { # the date becomes younger
     shifted <- if(BCAD) rcalib + shift else rcalib - shift
@@ -589,9 +614,9 @@ push.gamma <- function(y, er, mean, shape, add=TRUE, n=1e6, prob=0.95, cc=1, pos
     if(!BCAD) cal.lim <- rev(cal.lim)
   }
   
-  plot(0, type="n", xlim=cal.lim, ylim=c(0, 1.5), bty="l", ylab="", yaxt="s", xlab=ifelse(BCAD, "BCAD", "cal BP"))
-  draw.dist(cbind(calib), dist.col=calib.col, dist.border=calib.col, y.pos=0, ex=-1)
-  hpds <- draw.dist(cbind(shifted$x, shifted$y), prob=prob, y.pos=0, ex=-1)
+  plot(0, type="n", xlim=cal.lim, ylim=c(0, 1.5), bty="l", ylab="", yaxt="s", xlab=ifelse(BCAD, "BC/AD", "cal BP"))
+  draw.dist(cbind(calib), dist.col=calib.col, dist.border=calib.col, y.pos=0, fraction=heights)
+  hpds <- draw.dist(cbind(shifted$x, shifted$y), prob=prob, y.pos=0, fraction=heights)
  
   # inset graph
   if(inset) {

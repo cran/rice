@@ -29,7 +29,7 @@ as.bin(
   d.lim = c(),
   calib.col = rgb(0, 0, 0, 0.2),
   bin.col = rgb(0, 0, 1, 0.5),
-  bin.height = 4,
+  bin.height = 0.3,
   talk = TRUE,
   prob = 0.95,
   roundby = 0,

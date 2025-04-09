@@ -26,7 +26,7 @@ as.one(
   d.lim = c(),
   calib.col = rgb(0, 0, 0, 0.2),
   one.col = rgb(0, 0, 1, 0.5),
-  one.height = 4,
+  one.height = 0.3,
   prob = 0.95,
   talk = TRUE,
   roundby = 0,
