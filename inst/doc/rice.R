@@ -14,6 +14,10 @@ x <- seq(0, 55e3, length=100) # a sequence of ages
 y <- sapply(x, function(x) howmanyC14(x, talk=FALSE))
 plot(x, y, type="l", xlab="time (cal BP)", ylab="C-14 remaining")
 
+## -----------------------------------------------------------------------------
+adjust.fractionation(9000, -17) # the sample's d13C was measured at -17
+adjust.background(9000, 50, 48000, 200) # a well-oiled machine, with backgrounds of F=0.00254
+
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
 draw.ccurve()
 grid()
@@ -102,7 +106,7 @@ span(700, 20, 750, 20)
 y <- c(3820, 4590-90) 
 er <- c(40, sqrt(40^2 + 25^2)) 
 cc <- c(1,2)
-overlapping(y, er, cc=cc)
+overlap(y, er, cc=cc)
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
 contaminate(5000, 20, 10, 0, 1)

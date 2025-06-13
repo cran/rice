@@ -1,11 +1,12 @@
 
-# from/to	calBP		BCAD		C14			F14C		pMC			D14C	
-# calBP					calBPtoBCAD	calBPtoC14	calBPtoF14C	calBPtopMC	calBPtoD14C
-# BCAD		BCADtocalP				BCADtoC14	BCADtoF14C	BCADtopMC	BCADtoD14C
-# C14		C14tocalBP	C14toBCAD				C14toF14C	C14topMC	C14toD14C
-# F14C		NA			NA			F14CtoC14				F14CtopMC	F14CtoD14C
-# pMC		NA			NA			pMCtoC14	pMCtoF14C				pMCtoD14C
-# D14C		NA			NA			D14CtoC14	D14CtoF14C	D14CtopMC
+# from/to	calBP		BCAD		b2k			C14			F14C		pMC			D14C
+# calBP					calBPtoBCAD	calBPtob2k	calBPtoC14	calBPtoF14C	calBPtopMC	calBPtoD14C
+# BCAD		BCADtocalP				BCADtob2k	BCADtoC14	BCADtoF14C	BCADtopMC	BCADtoD14C
+# b2k       b2ktocalBP	b2ktoBCAD				b2ktoC14	b2ktoF14C	b2ktopMC	b2ktoD14C
+# C14		C14tocalBP	C14toBCAD	C14tob2k				C14toF14C	C14topMC	C14toD14C
+# F14C		NA			NA			NA			F14CtoC14				F14CtopMC	F14CtoD14C
+# pMC		NA			NA			NA			pMCtoC14	pMCtoF14C				pMCtoD14C
+# D14C		NA			NA			NA			D14CtoC14	D14CtoF14C	D14CtopMC
 
 
 
@@ -122,12 +123,16 @@ fromto <- function(x, from="calBP", cc=1, postbomb=1, cc.dir=NULL, thiscurve=NUL
 
   layout(matrix(1:2, nrow=1), widths=c(.5, .5))
   c14lim <- c(c14-width, c14+width) # hmmm
+  #message(c14lim[1], " ", c14lim[2])
   c14lim <- range(Cc[,2])
+  #message(c14lim[1], " ", c14lim[2])
   flim <- c(0, min(1.2*f14c,2))
+  #message(flim[1], " ", flim[2])
   par(mar=c(4,3,3,1), mgp=c(2, .7, 0), yaxt="s")
   plot(f14c, c14, xlim=flim, ylim=c14lim, 
     xlab=expression("F"^14*"C"), ylab=expression(""^14*"C BP"),
       bty="c", type="n", xaxs="i")
+
   abline(h=c14, lty=2)
   abline(v=f14c, lty=2)
   curve(-8033*log(x), from=min(flim), n=1e3, to=1.05*max(flim), add=TRUE, col=C14.col, lwd=2)
@@ -152,7 +157,6 @@ fromto <- function(x, from="calBP", cc=1, postbomb=1, cc.dir=NULL, thiscurve=NUL
   mincalbp <- min(calbp) - width
   maxcalbp <- max(calbp) + width
   D14C.coors <- draw.ccurve(mincalbp, maxcalbp, cc1=cc, cc2=cc, cc1.postbomb=TRUE, cc2.postbomb=TRUE, realm2="d", cc2.col=D14C.col, cc2.fill=D14C.col, add.yaxis=TRUE, cc.dir=cc.dir, ka=ka, bty="n", legend=NA, xaxs="i", yaxt="n", c14.lab="")
-
   C14.coors <- par("usr")
   if(!is.na(d14c))
     f.y <- ((d14c-D14C.coors[3])/(D14C.coors[4] - D14C.coors[3])) * (C14.coors[4] - C14.coors[3]) + C14.coors[3]
@@ -187,7 +191,7 @@ fromto <- function(x, from="calBP", cc=1, postbomb=1, cc.dir=NULL, thiscurve=NUL
 #' @title calculate BC/AD ages from cal BP ages
 #' @details Turn cal BP ages into BC/AD (or BCE/CE). Negative ages indicate BC, positive ages AD. Since the Gregorian and Julian calendars do not include 0 BCAD (i.e., 31 December of 1 BC is followed by 1 January of AD 1), zero can be omitted. The years then go from -1 (i.e., 1 BC) to 1 AD. Other calendars, such as the astronomical one, do include zero. The often-used BCE/CE ages are equivalent to BC/AD.
 #' @param x The calBP age(s) to be translated into BC/AD ages. 
-#' @param zero Whether or not zero BC/AD should be included. Defaults to 0. 
+#' @param zero Whether or not zero BC/AD should be included. Defaults to \code{zero=TRUE}.
 #' @return The BC/AD age(s). BC ages are negative, AD ages are positive.
 #' @examples
 #'  calBPtoBCAD(2024)
@@ -204,6 +208,19 @@ calBPtoBCAD <- function(x, zero=TRUE) {
       return(X) # x = 0 is not an error
     }
 }
+
+
+
+#' @name calBPtob2k
+#' @title calculate b2k ages from cal BP ages
+#' @details Turn cal BP ages into b2k ages (years before AD 2000), which are often used in the ice core community.
+#' @param x The calBP age(s) to be translated into b2k ages.
+#' @return The b2k ages.
+#' @examples
+#'  calBPtob2k(-50)
+#' @export
+calBPtob2k <- function(x)
+  return(x + 50)
 
 
 
@@ -313,7 +330,7 @@ calBPtoD14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=
 #' @title calculate cal BP ages from BC/AD ages
 #' @details Turn BC/AD (or BCE/CE) ages into cal BP ages. Negative ages indicate BC, positive ages AD. Since the Gregorian and Julian calendars do not include 0 BC/AD (i.e., 31 December of 1 BC is followed by 1 January of AD 1), zero can be omitted. The years then go from -1 (i.e., 1 BC) to 1 AD. Other calendars, such as the astronomical one, do include zero. The often-used BCE/CE ages are equivalent to BC/AD.
 #' @param x The BCAD age(s) to be translated into cal BP age(s). BC ages are negative, AD ages are positive.
-#' @param zero Whether or not zero BC/AD should be included. Defaults to 0. 
+#' @param zero Whether or not zero BC/AD should be included. Defaults to \code{zero=TRUE}.
 #' @return The cal BP age(s).
 #' @examples
 #'  BCADtocalBP(2024)
@@ -332,6 +349,29 @@ BCADtocalBP <- function(x, zero=TRUE)
 
 
 
+#' @name BCADtob2k
+#' @title calculate b2k from BC/AD ages
+#' @details Turn BC/AD (or BCE/CE) ages into b2k ages. b2k ages are used frequently in the ice core community. Negative ages indicate BC, positive ages AD. Since the Gregorian and Julian calendars do not include 0 BC/AD (i.e., 31 December of 1 BC is followed by 1 January of AD 1), zero can be omitted. The years then go from -1 (i.e., 1 BC) to 1 AD. Other calendars, such as the astronomical one, do include zero. The often-used BCE/CE ages are equivalent to BC/AD.
+#' @param x The BCAD age(s) to be translated into b2k age(s). BC ages are negative, AD ages are positive.
+#' @param zero Whether or not zero BC/AD should be included. Defaults to \code{zero=TRUE}.
+#' @return The b2k age(s).
+#' @examples
+#'  BCADtob2k(2025)
+#'  BCADtob2k(-1, zero=TRUE)
+#'  BCADtob2k(-1, zero=FALSE)
+#' @export
+BCADtob2k <- function(x, zero=TRUE)
+  if(zero)
+    return(2000-x) else {
+      X <- 2000-x
+      neg <- which(x < 0)
+      if(length(neg) > 0)
+        X[neg] <- 1999-x[neg]
+        return(X) # x = 0 is not an error
+    }
+
+
+
 #' @name BCADtoC14
 #' @title Find the 14C age and error belonging to a BC/AD age.
 #' @description Given a calendar age, the calibration curve (default cc=1) is interpolated and the corresponding 14C age and error are returned. BC ages are negative. In this implementation, the year 0 BC/AD does exist.
@@ -340,7 +380,7 @@ BCADtocalBP <- function(x, zero=TRUE)
 #' @param x The BC/AD year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
-#' @param zero Whether or not to include 0 in BC/AD years. Defaults to TRUE.
+#' @param zero Whether or not zero BC/AD should be included. Defaults to \code{zero=TRUE}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). 
@@ -356,13 +396,13 @@ BCADtoC14 <- function(x, cc=1, postbomb=FALSE, zero=TRUE, rule=1, cc.dir=NULL, t
 
 #' @name BCADtoF14C
 #' @title Find the F14C and error belonging to a BC/AD age.
-#' @description Given a calendar age, the calibration curve (default cc=1) is interpolated and the corresponding F14C and error are returned. BC ages are negative. In this implementation, the year 0 BC/AD does exist.
+#' @description Given a calendar age, the calibration curve (default cc=1) is interpolated and the corresponding F14C and error are returned. BC ages are negative.
 #' @details Interpolation is used, and values outside the calibration curve are given as NA. For ages younger than AD 1950, a postbomb curve will have to be provided.
 #' @return The calibration-curve F14C belonging to the entered BC/AD age
 #' @param x The BC/AD year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
-#' @param zero Whether or not to include 0 in BC/AD years. Defaults to TRUE.
+#' @param zero Whether or not zero BC/AD should be included. Defaults to \code{zero=TRUE}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). 
@@ -379,13 +419,13 @@ BCADtoF14C <- function(x, cc=1, postbomb=FALSE, zero=TRUE, rule=1, cc.dir=NULL, 
 
 #' @name BCADtopMC
 #' @title Find the pMC and error belonging to a BC/AD age.
-#' @description Given a calendar age, the calibration curve (default cc=1) is interpolated and the corresponding pMC and error are returned. BC ages are negative. In this implementation, the year 0 BC/AD does exist.
+#' @description Given a calendar age, the calibration curve (default cc=1) is interpolated and the corresponding pMC and error are returned. BC ages are negative.
 #' @details Interpolation is used, and values outside the calibration curve are given as NA. For ages younger than AD 1950, a postbomb curve will have to be provided.
 #' @return The calibration-curve F14C belonging to the entered BC/AD age
 #' @param x The BC/AD year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
-#' @param zero Whether or not to include 0 in BC/AD years. Defaults to TRUE.
+#' @param zero Whether or not zero BC/AD should be included. Defaults to \code{zero=TRUE}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). 
@@ -406,7 +446,7 @@ BCADtopMC <- function(x, cc=1, postbomb=FALSE, zero=TRUE, rule=1, cc.dir=NULL, t
 #' @details Interpolation is used, and values outside the calibration curve are given as NA. For negative cal BP ages, a postbomb curve will have to be provided.
 #' @return The calibration-curve 14C year belonging to the entered cal BP age
 #' @param x The cal BP year.
-#' @param zero Whether or not to include 0 in BC/AD years. Defaults to TRUE.
+#' @param zero Whether or not zero BC/AD should be included. Defaults to \code{zero=TRUE}.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
@@ -419,6 +459,134 @@ BCADtopMC <- function(x, cc=1, postbomb=FALSE, zero=TRUE, rule=1, cc.dir=NULL, t
 #' @export
 BCADtoD14C <- function(x, zero=TRUE, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, decimals=8) {
   calBP <- BCADtocalBP(x, zero)
+  Fres <- calBPtoF14C(calBP, cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, decimals=decimals)
+  Dmn <- F14CtoD14C(Fres[,1], t=x)
+  Dup <- F14CtoD14C(Fres[,1]+Fres[,2], t=x)
+  return(cbind(Dmn, Dup-Dmn, deparse.level=0))
+}
+
+
+
+#' @name b2ktocalBP
+#' @title calculate cal BP ages from b2k ages
+#' @details Turn b2k ages (often used in the ice core community, AD 2000) into cal BP ages.
+#' @param x The b2k age(s) to be translated into cal BP age(s).
+#' @return The cal BP age(s).
+#' @examples
+#'  b2ktocalBP(0)
+#' @export
+b2ktocalBP <- function(x)
+  return(x - 50)
+
+
+
+#' @name b2ktoBCAD
+#' @title calculate BC/AD ages from b2k ages
+#' @details Turn b2k ages (popular in the ice core community) into BC/AD (or BCE/CE). Negative ages indicate BC, positive ages AD. Since the Gregorian and Julian calendars do not include 0 BCAD (i.e., 31 December of 1 BC is followed by 1 January of AD 1), zero can be omitted. The years then go from -1 (i.e., 1 BC) to 1 AD. Other calendars, such as the astronomical one, do include zero. The often-used BCE/CE ages are equivalent to BC/AD.
+#' @param x The b2k age(s) to be translated into BC/AD ages.
+#' @param zero Whether or not zero BC/AD should be included. Defaults to \code{zero=TRUE}.
+#' @return The BC/AD age(s). BC ages are negative, AD ages are positive.
+#' @examples
+#'  b2ktoBCAD(0)
+#'  b2ktoBCAD(1990:2010, zero=TRUE)
+#'  b2ktoBCAD(1990:2010, zero=FALSE)
+#' @export
+b2ktoBCAD <- function(x, zero=TRUE) {
+  if(zero)
+    return(2000-x) else {
+      X <- 2000-x
+      neg <- which(x >= 2000)
+      if(length(neg) > 0)
+        X[neg] <- 1999 - x[neg]
+      return(X) # x = 0 is not an error
+    }
+}
+
+
+
+#' @name b2ktoC14
+#' @title Find the 14C age and error belonging to a b2k age.
+#' @description Given a b2k age (years before AD 2000, popular in the ice core community), the calibration curve (default cc=1) is interpolated and the corresponding 14C age and error are returned.
+#' @details Interpolation is used, and values outside the calibration curve are given as NA. For ages younger than 50 b2k, a postbomb curve will have to be provided.
+#' @return The calibration-curve 14C year belonging to the entered b2k age
+#' @param x The b2k year.
+#' @param cc calibration curve for C14 (see \code{caldist()}).
+#' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
+#' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
+#' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
+#' @author Maarten Blaauw
+#' @examples
+#'   b2ktoC14(100)
+#' @export
+b2ktoC14 <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL)
+  return(calBPtoC14(b2ktocalBP(x),
+    cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve))
+
+
+
+#' @name b2ktoF14C
+#' @title Find the F14C and error belonging to a b2k age.
+#' @description Given a b2k age (years before AD 2000, popular in the ice core community), the calibration curve (default cc=1) is interpolated and the corresponding F14C and error are returned.
+#' @details Interpolation is used, and values outside the calibration curve are given as NA. For ages younger than 50 b2k, a postbomb curve will have to be provided.
+#' @return The calibration-curve F14C belonging to the entered b2k age
+#' @param x The b2k year.
+#' @param cc calibration curve for C14 (see \code{caldist()}).
+#' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
+#' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
+#' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
+#' @param decimals Amount of decimals required for the F14C value. Defaults to 8.
+#' @author Maarten Blaauw
+#' @examples
+#'   b2ktoF14C(100)
+#' @export
+b2ktoF14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, decimals=8)
+  return(calBPtoF14C(b2ktocalBP(x),
+    cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, decimals=decimals))
+
+
+
+#' @name b2ktopMC
+#' @title Find the pMC and error belonging to a b2k age.
+#' @description Given a b2k age (years before AD 2000, popular in the ice core community), the calibration curve (default cc=1) is interpolated and the corresponding pMC and error are returned.
+#' @details Interpolation is used, and values outside the calibration curve are given as NA. For ages younger than 50 b2k, a postbomb curve will have to be provided.
+#' @return The calibration-curve F14C belonging to the entered b2k age
+#' @param x The b2k year.
+#' @param cc calibration curve for C14 (see \code{caldist()}).
+#' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
+#' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
+#' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
+#' @param decimals Amount of decimals required for the F14C value. Defaults to 8.
+#' @author Maarten Blaauw
+#' @examples
+#'   b2ktopMC(100)
+#' @export
+b2ktopMC <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, decimals=8)
+  return(calBPtopMC(b2ktocalBP(x),
+    cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, decimals=decimals))
+
+
+
+#' @name b2ktoD14C
+#' @title Find the pMC and error belonging to a b2k age.
+#' @description Given a b2k age (years before AD 2000, popular in the ice core community), the calibration curve (default cc=1) is interpolated and the corresponding F14C value and error are returned.
+#' @details Interpolation is used, and values outside the calibration curve are given as NA. For b2k < 50, a postbomb curve will have to be provided.
+#' @return The calibration-curve 14C year belonging to the entered b2k age
+#' @param x The b2k year.
+#' @param cc calibration curve for C14 (see \code{caldist()}).
+#' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
+#' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
+#' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
+#' @param decimals Amount of decimals required for the F14C value. Defaults to 8.
+#' @author Maarten Blaauw
+#' @examples
+#'   b2ktoD14C(100)
+#' @export
+b2ktoD14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, decimals=8) {
+  calBP <- b2ktocalBP(x)
   Fres <- calBPtoF14C(calBP, cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, decimals=decimals)
   Dmn <- F14CtoD14C(Fres[,1], t=x)
   Dup <- F14CtoD14C(Fres[,1]+Fres[,2], t=x)
@@ -501,6 +669,28 @@ C14tocalBP <- function(y, cc=1, postbomb=FALSE, rule=2, cc.dir=NULL, thiscurve=N
 C14toBCAD <- function(y, cc=1, postbomb=FALSE, rule=1, zero=TRUE, cc.dir=NULL, thiscurve=NULL) {
   x <- C14tocalBP(y)
   return(calBPtoBCAD(x, zero=zero))
+}
+
+
+
+#' @name C14tob2k
+#' @title Find the b2k age(s) crossing a C14 age.
+#' @description Find the b2k ages (years before AD 2000, popular in the ice core community) where the calibration curve crosses a given C14 age. This function is for illustration only and not to be used for, e.g., calibration, because intercept calibration is an outdated method.
+#' @return The b2k age(s) belonging to the entered C14 age
+#' @details. Whereas each calendar age will only have one single IntCal radiocarbon age (mu), the same cannot be said for the other way round. Recurring C14 ages do happen, especially during periods of plateaux and wiggles. Therefore, there can be multiple cal BP ages for a single C14 age. In the early days, radiocarbon calibration used an 'intercept method' to find possible calendar ages belonging to a radiocarbon age, but this is problematic since small deviations in the C14 age can easily cause more or fewer crossing cal BP ages (try for example C14tocalBP(130) vs C14tocalBP(129)), and moreover, this approach does not deal well with the errors in either a date of the calibration curve. Therefore, the probabilistic approach to radiocarbon calibration (which starts with a cal BP age and then looks up the corresponding C14 age) has taken over as the standard.
+#' @param y The C14 age.
+#' @param cc calibration curve for C14 (see \code{caldist()}).
+#' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
+#' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
+#' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
+#' @author Maarten Blaauw
+#' @examples
+#'  C14tob2k(130,20)
+#' @export
+C14tob2k <- function(y, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL) {
+  x <- C14tocalBP(y)
+  return(calBPtob2k(x))
 }
 
 
@@ -597,8 +787,8 @@ C14toD14C <- function(y, er=NULL, t, decimals=8) {
 #' @param lambda The mean-life of radiocarbon (based on Libby half-life of 5568 years)
 #' @return The radiocarbon ages from the F14C values. If F14C values are above 100\%, the resulting radiocarbon ages will be negative.
 #' @examples
-#'   F14CtoC14(1.10, 0.5) # a postbomb date, so with a negative C14 age
-#'   F14CtoC14(.80, 0.5) # prebomb dates can also be calculated
+#'   F14CtoC14(1.10, 0.005) # a postbomb date, so with a negative C14 age
+#'   F14CtoC14(.80, 0.005) # prebomb dates can also be calculated
 #' @export
 F14CtoC14 <- function(F14C, er=NULL, decimals=8, lambda=8033) {
   y <- -lambda * log(F14C)
@@ -609,6 +799,16 @@ F14CtoC14 <- function(F14C, er=NULL, decimals=8, lambda=8033) {
   }
 }
 
+# chatGPT suggests:
+#F14CtoC14 <- function(F14C, er = NULL, decimals = 8, lambda = 8033) {
+#  y <- -lambda * log(F14C)
+#  if (is.null(er)) {
+#    round(y, decimals)
+#  } else {
+#    sdev <- lambda * er / F14C
+#    round(cbind(y, sdev), decimals)
+#  }
+#}
 
 
 #' @name F14CtopMC
@@ -722,8 +922,15 @@ pMCtoD14C <- function(pMC, er=NULL, t) {
 #' @examples
 #'   D14CtoC14(-10, 1, 238)
 #' @export
-D14CtoC14 <- function(D14C, er=NULL, t, decimals=8)
-  return( F14CtoC14( D14CtoF14C(D14C=D14C, er=er, t=t), decimals=decimals) )
+D14CtoC14 <- function(D14C, er=NULL, t, decimals=8) {
+  toF <- D14CtoF14C(D14C=D14C, er=er, t=t)
+  if(is.null(dim(toF)))
+    return(F14CtoC14(toF, c(), decimals=decimals)) else {
+     # toF <- rbind(toF)
+      toF <- as.matrix(toF, ncol=2)
+      return(F14CtoC14(toF[,1], toF[,2], decimals=decimals))
+    }
+}
 
 
 
