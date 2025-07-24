@@ -1,14 +1,12 @@
-# add sample weight functions (per Philippa Ascough's suggestion. Given a %C (perhaps provide estimates for sample types such as peat, bone, ...), a loss during pretreatment, and a required graphite weight, what sample weight will be required?)
+#
 
-# do rintcal::glue.ccurves and mix.ccurves require as.D?
+# add sample weight functions (per Philippa Ascough's suggestion). Given a %C (perhaps provide estimates for sample types such as peat, bone, ...), a loss during pretreatment, and a required graphite weight, what sample weight will be required?)
 
-# in calibrate(), make interpolation to e.g. years more intelligent (default c() then 1 if prebomb, .1 if postbomb
+# prepare a function to redo deltaR calcs when new Marine curves come out. Using BCADtocalBP(shells$collected), calBPto14C(cc=2) and shells$C14, shells$er. Unclear how the dR errors are obtained.
 
-# add data from historical UBA standards/backgrounds?
+# fruits-type model that mixes atmospheric and marine calibration curves. Freshwater effects can cause C14 shifts of up to 1k.
 
-# terr-marine contribution calculation
-
-# error multipliers, rounding
+# error multipliers, rounding. Could add procedures for different labs, e.g. QUB_bg, etc. This would be useful for reasons of transparency and community standards. Add data from historical UBA standards/backgrounds?
 
 #' @name howmanyC14
 #' @title Amount of C14 particles in a sample
@@ -39,20 +37,19 @@ howmanyC14 <- function(age, wght=1, use.cc=TRUE, Av=6.02214076e23, C14.ratio=1.1
     F <- calBPtoF14C(age, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[,1]
     if(is.na(F)) {
       message("Cannot use calibration curve for this age, assuming C14 age")
-      F <- C14toF14C(age, decimals=10)
+      F <- C14toF14C(age)
   }} else
-      F <- C14toF14C(age, decimals=10) # then t is on the C14 scale
+      F <- C14toF14C(age) # then t is on the C14 scale
 
+  F <- as.numeric(F)
   atoms <- (wght/1e3)*Av/12 # number of C atoms in a mg
-  C14 <- round(F * C14.ratio * atoms, 0) # C14 atoms roundest to nearest number
+  C14 <- as.numeric(round(F * C14.ratio * atoms, 0)) # C14 atoms roundest to nearest number
   perminute <- round(C14/wght/30,0)
   persecond <- round(perminute/60,0)
-
   atoms <- formatC(atoms, format=format, digits=decimals)
   C14.talk <- formatC(C14, format=format, digits=decimals)
-  
   decays <- round(C14 * log(2) / (5730 * 365.25), decimals)
-  decays <- formatC(decays, format=format, digits=decimals)
+ decays <- formatC(decays, format=format, digits=decimals)
 
   if(talk) {
     message(wght, " mg carbon contains ", atoms, " C atoms")

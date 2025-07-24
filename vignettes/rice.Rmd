@@ -155,6 +155,12 @@ C14toD14C(152, t=4000)
 D14CtoC14(592, t=4000)
 ```
 
+Although ages are most often expressed as 14C BP, radiocarbon labs calculate these ages from the measured F14C values. Since 14C BP = -8033 * ln(F), the distributions of especially older 14C ages and those with large errors become skewed, sometimes with their tails extending into infinite ages:
+ 
+```{r, fig.width=5, fig.asp=1}
+draw.CF(50000, 3000) 
+```
+
 ---
 
 Here's a function to transform values between multiple realms and visualise them:
@@ -229,7 +235,7 @@ span(700, 20, 750, 20)
 We can assess to what degree two calibrated distributions are overlapping (as the minimum calibrated height for each calendar year in a range). For example, imagine two dates from the same archaeological layer, a twig (3820 &pm; 40 C-14 BP, requiring calibration with IntCal20) and a marine shell (4430 &pm; 40 C-14 BP, requiring Marine20, with a regional marine offset of 90 &pm; 25). By what percentage do the two calibrated distributions overlap?
 
 ```{r, fig.width=5, fig.asp=.8}
-y <- c(3820, 4590-90) 
+y <- c(3820, 4430+90)
 er <- c(40, sqrt(40^2 + 25^2)) 
 cc <- c(1,2)
 overlap(y, er, cc=cc)
@@ -271,6 +277,12 @@ muck(591, 30, perFaith[,1], perFaith[,2], repairF[,1], repairF[,2])
 
 This means that the dated sample would have to consist almost entirely of Medieval age material - which is exactly what was found by Damon et al. (1989)[^6].
 
+What if we had a sample with a known percentage of contamination, and wanted to know the required activity (F14C) of said contamination to explain away a date? This can be done by providing the percentage contamination (e.g., 10\%):
+
+```{r, fig.width=5, fig.asp=.8}
+muck(500, 20, 600, 25, perc.contam=10)
+```
+
 The effect of different levels of contamination can be visualised:
 
 ```{r, fig.width=6, fig.asp=.8}
@@ -301,6 +313,8 @@ ages <- c(130, 130, 130, NA) # ages of all fractions. The unmeasured one is NA
 errors <- c(10, 12, 10, NA) # errors, unmeasured is NA
 fractions(150, 20, Cs, wghts, ages, errors) # assuming a bulk age of 150 +- 20 C14 BP 
 ```
+
+The above function can also be used to find the expected age of an entire sample, given the fractions and their ages - please type `?fractions` for more detail. 
 
 # Calibration
 
@@ -403,6 +417,13 @@ You can also extract say the 20 shells closest to a coordinate, e.g., 120 East a
 myshells <- find.shells(120, 10, 20)
 shells.mean(myshells, distance=TRUE)
 ```
+
+Instead of a static map, for `find.shells` and `map.shells` you can also request an interactive, browsable map, which will open in your Internet browser:
+
+```{r, fig.width=5, fig.asp=1, eval=FALSE}
+find.shells(120, 10, 50, browse=TRUE)
+```
+<img src="./findshells_browse.png" width="600" />
 
 # Multiple calibrations
 

@@ -10,44 +10,65 @@
 #' @param roundby Rounding of the reported age
 #' @param talk Provide feedback
 #' @examples
-#' Cs <- c(.02, .05, .03, .04) # carbon contents of each fraction
-#' wghts <- c(5, 4, 2, .5) # weights for all fractions, e.g., in mg
-#' ages <- c(130, 130, 130, NA) # ages of all fractions. The unmeasured one is NA
-#' errors <- c(10, 12, 10, NA) # errors, unmeasured is NA
-#' fractions(150, 20, Cs, wghts, ages, errors) # assuming a bulk age of 150 +- 20 C14 BP
+#'   Cs <- c(.02, .05, .03, .04) # carbon contents of each fraction
+#'   wghts <- c(5, 4, 2, .5) # weights for all fractions, e.g., in mg
+#'   ages <- c(130, 130, 130, NA) # ages of all fractions. The unmeasured one is NA
+#'   errors <- c(10, 12, 10, NA) # errors, unmeasured is NA
+#'   fractions(150, 20, Cs, wghts, ages, errors) # assuming a bulk age of 150 +- 20 C14 BP
+#'   # if all fraction ages are known, model the combined age:
+#'   Cs <- c(.02, .05, .03, .04) # carbon contents of each fraction
+#'   wghts <- c(5, 4, 2, .5) # weights for all fractions, e.g., in mg
+#'   ages <- c(130, 140, 150, 200)
+#'   errors <- c(10, 12, 10, 14)
+#'   fractions(,, Cs, wghts, ages, errors)
 #' @export
-fractions <- function(bulk_age, bulk_er, fractions_percC, fractions_weights, fractions_ages, fractions_errors, roundby=1, talk=TRUE) {
+fractions <- function(bulk_age=NULL, bulk_er=NULL, fractions_percC=NULL, fractions_weights=NULL, fractions_ages=NULL, fractions_errors=NA, roundby=1, talk=TRUE) {
 
   if(length(which(is.na(fractions_ages))) > 1 || length(which(is.na(fractions_errors))) > 1)
     stop("Cannot deal with multiple missing fraction ages/errors")
 
   unknown_age <- which(is.na(fractions_ages))
+
   totC <- fractions_percC * fractions_weights # how much C in total
   totC <- totC / sum(totC) # normalise to 1
 
-  # Bulk F14C value and its error
-  bulk_F <- C14toF14C(bulk_age, bulk_er)
+  if(length(unknown_age) == 1) { # then we know the bulk age and most fraction ages, and want to estimate the unknown fraction's age
 
-  # F14C values for the known fractions (ignoring the unknown one)
-  fractions_F <- C14toF14C(fractions_ages[-unknown_age], fractions_errors[-unknown_age])
+    # Bulk F14C value and its error
+    bulk_F <- C14toF14C(bulk_age, bulk_er)
 
-  # Carbon contribution * F14C value for each known fraction
-  fractions_cF <- totC[-unknown_age] * fractions_F[,1] # carbon contribution * C14 ages
+    # F14C values for the known fractions (ignoring the unknown one)
+    fractions_F <- C14toF14C(fractions_ages[-unknown_age], fractions_errors[-unknown_age])
 
-  # Propagate the uncertainty for the known fractions, weighted by their %C and errors
-  total_known_error <- sum((totC[-unknown_age]^2) / (fractions_F[,2]^2))
-  overall_uncertainty <- sqrt(total_known_error + bulk_F[2]^2)
+    # Carbon contribution * F14C value for each known fraction
+    fractions_cF <- totC[-unknown_age] * fractions_F[,1] # carbon contribution * C14 ages
 
-  # Calculate the remaining fraction's F14C value and age
-  unknown_F <- bulk_F[1] - sum(fractions_cF)
-  unknown_age_estimated <- F14CtoC14(unknown_F / totC[unknown_age])
+    # Propagate the uncertainty for the known fractions, weighted by their %C and errors
+    total_known_error <- sum((totC[-unknown_age]^2) / (fractions_F[,2]^2))
+    overall_uncertainty <- sqrt(total_known_error + bulk_F[2]^2)
 
-  unknown_age <- c(age=unknown_age_estimated[1], error=overall_uncertainty)
+    # Calculate the remaining fraction's F14C value and age
+    unknown_F <- bulk_F[1] - sum(fractions_cF)
+    unknown_age_estimated <- F14CtoC14(unknown_F / totC[unknown_age])
+    unknown_age <- unlist(c(unknown_age_estimated[1], overall_uncertainty))
 
-  if(talk)
-    message(paste0("estimated C14 age of fraction ", which(is.na(fractions_ages)), ": ",
-      round(unknown_age[1], roundby), " +- ", round(unknown_age[2], roundby)))
-  invisible(unknown_age)
+    if(talk)
+      message(paste0("estimated C14 age of fraction ", which(is.na(fractions_ages)), ": ",
+        round(unknown_age[1], roundby), " +- ", round(unknown_age[2], roundby)))
+    invisible(unknown_age)
+  } else { # ages of all fractions known; calculate the combined age
+
+    # we need fractions_percC, fractions_weights, fractions_ages, fractions_errors
+    fractions_F <- C14toF14C(fractions_ages, fractions_errors)
+    tot_F <- sum(totC * fractions_F[,1])
+    tot_F_er <- sum(sqrt(fractions_F[,2]^2))
+    FasC <- FtoC(tot_F, tot_F_er)
+
+    if(talk)
+      message("predicted combined age ", round(FasC[,1], roundby), " +- ", round(FasC[,2], roundby))
+
+    invisible(FasC)
+  }
 }
 
 
@@ -88,7 +109,7 @@ plot_contamination <- function(true.F, true.er, obs.F, obs.er, perc, perc.er, co
   if(C14.axis) {
     C14.ticks <- F14CtoC14(pretty(ylim)) # find the C14 ages of the F tick marks
     C14.ticks <- C14.ticks[!is.na(C14.ticks)]
-    C14.ticklocs <- c(C14toF14C(C14.ticks))
+    C14.ticklocs <- unlist(C14toF14C(C14.ticks))
     axis(4, C14.ticklocs, labels=round(C14.ticks,0))
     mtext("C14", 4, 2.5)
   }
@@ -104,10 +125,12 @@ plot_contamination <- function(true.F, true.er, obs.F, obs.er, perc, perc.er, co
 #' @param y The 'true' radiocarbon age
 #' @param er The error of the 'true' radiocarbon age
 #' @param percentage Relative amount of contamination. Must be between 0 and 1
-#' @param percentage.error Uncertainty of the contamination. Assumed to be normally distributed (which fails close to 0\% or 100\% contamination levels). Defaults to 0\%.
+#' @param percentage.error Uncertainty of the contamination. Assumed to be normally distributed (which fails close to 0\% or 100\% contamination levels). Defaults to a very small but >0 value, 0.001\%.
 #' @param F.contam the F14C of the contamination. Set at 1 for carbon of modern radiocarbon age, at 0 for 14C-free carbon, or anywhere inbetween.
-#' @param F.contam.er error of the contamination. Defaults to 0.
+#' @param F.contam.er error of the contamination. Defaults to a very small but >0 value, 0.001\%.
 #' @param MC Whether or not to use Monte Carlo iterations to estimate the values. Defaults to TRUE, because it treats uncertainties better than if set to FALSE.
+#' @param seed For reproducibility, a seed can be set (e.g., \code{seed=123}). Defaults to NA, no seed set.
+#' @param seed For reproducibility, a seed can be set (e.g., \code{seed=123}). Defaults to NA, no seed set.
 #' @param its Amount of iterations to use if MC=TRUE. Defaults to 10,000.
 #' @param decimals Rounding of the output for F values. Since details matter here, the default is to provide 5 decimals.
 #' @param roundby Rounding of the output for C14 ages. Defaults to 1 decimal.
@@ -115,7 +138,7 @@ plot_contamination <- function(true.F, true.er, obs.F, obs.er, perc, perc.er, co
 #' @param talk Whether or not to report the calculations made. Defaults to \code{talk=TRUE}.
 #' @param eq.x Leftmost location of the equation. Defaults to \code{eq.x=5}. Can be set to values outside of (0,100) to make the equation invisible.
 #' @param eq.y Vertical location of the equation. Defaults to the top of the graph.
-#' @param eq.size Size of the font of the equation. In case the equation gets jumbled up upon resizing of a graphical device, just issue the previous `clean` command again. Defaults to \code{eq.size=0.8}.
+#' @param eq.size Size of the font of the equation. In case the equation gets jumbled up upon resizing of a graphical device, just issue the previous `contaminate` command again. Defaults to \code{eq.size=0.8}.
 #' @param true.col Colour for the target/true values. Defaults to "darkgreen".
 #' @param observed.col Colour for the observed values. Defaults to blue.
 #' @param contamination.col Colour for the contamination values. Defaults to red.
@@ -130,10 +153,11 @@ plot_contamination <- function(true.F, true.er, obs.F, obs.er, perc, perc.er, co
 #' @param bty Draw a box around a box of a certain shape. Defaults to \code{bty="u"}.
 #' @author Maarten Blaauw
 #' @examples
-#' contaminate(5000, 20, 1, 0, 1) # 1% contamination with modern carbon
-#' contaminate(66e6, 1e6, 1, 0, 1) # dino bone, shouldn't be dated as way beyond the dating limit
+#' contaminate(5000, 20, 5, 0, 1) # 5% contamination with modern carbon
+#' # dino bone with 1% contamination, shouldn't be dated as way beyond the dating limit:
+#' contaminate(66e6, 1e6, 1, 0, 1) 
 #' @export
-contaminate <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.er=0, MC=TRUE, its=1e4, decimals=5, roundby=1, visualise=TRUE, talk=TRUE, eq.x=5, eq.y=c(), eq.size=0.7, true.col="darkgreen", observed.col="blue", contamination.col="red", true.pch=20, observed.pch=18, contamination.pch=17, true.name="true", xlab="contamination (%)", ylab="F14C", ylim=c(), C14.axis=TRUE, bty="u") {
+contaminate <- function(y, er=0, percentage, percentage.error=0.001, F.contam=1, F.contam.er=0.001, MC=TRUE, seed=NA, its=1e4, decimals=5, roundby=1, visualise=TRUE, talk=TRUE, eq.x=5, eq.y=c(), eq.size=0.7, true.col="darkgreen", observed.col="blue", contamination.col="red", true.pch=20, observed.pch=18, contamination.pch=17, true.name="true", xlab="contamination (%)", ylab="F14C", ylim=c(), C14.axis=TRUE, bty="u") {
   if(percentage < 0 || percentage > 100)
     stop("percentage should be between 0 and 100%", call.=FALSE) 
   if(F.contam < 0)
@@ -147,9 +171,13 @@ contaminate <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.c
     if(length(y) != length(er))
       stop("y and er need to be of the same length", call.=FALSE)
 
-  F.true <- as.data.frame(C14toF14C(y, er, decimals))
+  F.true <- as.data.frame(C14toF14C(y, er, roundby=decimals))
 
   if(MC) {
+    if(!is.na(seed))
+      if(is.numeric(seed))
+        set.seed(seed) else
+          message("seed has to be numeric")
     if(its < 10)
       stop("too few samples for robust analysis. Increase 'its'", call.=FALSE)
     alpha <- (fraction / (percentage.error / 100))^2
@@ -167,7 +195,7 @@ contaminate <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.c
         F.contam.samples <- rnorm(length(fraction.samples), F.contam, F.contam.er)
 
     F.obs.samples <- (1 - fraction.samples) * F.true.samples + fraction.samples * F.contam.samples # calculate observed F's
-    C14.obs.samples <- F14CtoC14(F.obs.samples, 0, decimals)[,1]
+    C14.obs.samples <- F14CtoC14(F.obs.samples, 0, roundby=decimals)[,1]
     F.obs <- mean(F.obs.samples)
     F.obs.er <- sd(F.obs.samples)
     if(is.na(F.obs.er)) { # if errors are 0, then sd(0) gives NA
@@ -180,7 +208,7 @@ contaminate <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.c
   } else {
       F.obs <- ((1-fraction)*F.true[,1]) + (fraction*F.contam)
       F.obs.er <- sqrt(F.true[,2]^2 + F.contam.er^2)
-      C14.obs <- F14CtoC14(F.obs, er, decimals)
+      C14.obs <- F14CtoC14(F.obs, er, roundby=decimals)
     }
 
   if(visualise)
@@ -196,8 +224,10 @@ contaminate <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.c
       colours <- c(observed.col, rep(true.col, 5), 1, rep(contamination.col, 5), rep(observed.col, 7))
       xpos <- eq.x+(eq.size*cumsum(c(0, strwidth(txt[-length(txt)])))/1.32)
       fnt <- c(rep(1, 14), rep(2, 5)) # last bit has to be bold
+      coors <- par('usr')
       if(length(eq.y) == 0)
-        eq.y <- 1.01*max(c(F.obs, F.true[,1], F.contam))
+        eq.y <- coors[4] - .05*(coors[4]-coors[3])
+
       op <- par(xpd=TRUE) # to avoid truncated printing
       for(i in seq_along(txt))
         text(x = xpos[i], y = eq.y, labels = txt[i], col = colours[i], adj = c(0, 0), font=fnt[i], cex=eq.size/1.32)
@@ -227,10 +257,11 @@ contaminate <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.c
 #' @param y The observed radiocarbon age
 #' @param er The error of the observed radiocarbon age
 #' @param percentage Relative amount of contamination. Must be between 0 and 100 (\%)
-#' @param percentage.error Uncertainty of the contamination. Assumed to be normally distributed (which fails close to 0\% or 100\% contamination levels). Defaults to 0\%.
+#' @param percentage.error Uncertainty of the contamination. Assumed to be normally distributed (which fails close to 0\% or 100\% contamination levels). Defaults to a very small but >0 value, 0.001\%.
 #' @param F.contam The F14C of the contamination. Set at 1 for carbon of modern radiocarbon age, at 0 for 14C-free carbon, or anywhere inbetween.
-#' @param F.contam.er The error of the contamination. Defaults to 0.
+#' @param F.contam.er The error of the contamination. Defaults to a very small but >0 value, 0.001\%.
 #' @param MC Whether or not to use Monte Carlo iterations to estimate the values. Defaults to TRUE, because it treats uncertainties better than if set to FALSE.
+#' @param seed For reproducibility, a seed can be set (e.g., \code{seed=123}). Defaults to NA, no seed set.
 #' @param its Amount of iterations to use if MC=TRUE. Defaults to 10,000.
 #' @param decimals Rounding of the output. Since details matter here, the default is to provide 5 decimals.
 #' @param roundby Rounding of the output for C14 ages. Defaults to 1 decimal.
@@ -258,7 +289,7 @@ contaminate <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.c
 #' # now with errors:
 #' clean(5000, 20, 1, 0.1, 1, 0.1)
 #' @export
-clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.er=0, MC=TRUE, its=1e4, roundby=1, decimals=5, visualise=TRUE, talk=TRUE, eq.x=5, eq.y=c(), eq.size=0.75, true.col="darkgreen", observed.col="blue", contamination.col="red", true.pch=20, observed.pch=18, contamination.pch=17, true.name="true", xlab="contamination (%)", ylab="F14C", ylim=c(), C14.axis=TRUE, bty="u") {
+clean <- function(y, er=0, percentage, percentage.error=0.001, F.contam=1, F.contam.er=0.001, MC=TRUE, seed=NA, its=1e4, roundby=1, decimals=5, visualise=TRUE, talk=TRUE, eq.x=5, eq.y=c(), eq.size=0.75, true.col="darkgreen", observed.col="blue", contamination.col="red", true.pch=20, observed.pch=18, contamination.pch=17, true.name="true", xlab="contamination (%)", ylab="F14C", ylim=c(), C14.axis=TRUE, bty="u") {
   if(length(y)>1)
     stop("cannot deal with more than one value at a time")
   if(percentage < 0 || percentage > 100)
@@ -274,9 +305,13 @@ clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.
     if(length(y) != length(er))
       stop("y and er need to be of the same length", call.=FALSE)
   
-  F.obs <- as.data.frame(C14toF14C(y, er, decimals))
+  F.obs <- as.data.frame(C14toF14C(y, er, roundby=decimals))
 
   if(MC) {
+    if(!is.na(seed))
+      if(is.numeric(seed))
+        set.seed(seed) else
+          message("seed has to be numeric")
     if(its < 10)
       stop("too few samples for robust analysis. Increase 'its'", call.=FALSE)
     alpha <- (fraction / (percentage.error / 100))^2
@@ -294,7 +329,7 @@ clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.
         F.contam.samples <- rnorm(length(fraction.samples), F.contam, F.contam.er)
 
     F.true.samples <- (F.obs.samples - fraction.samples * F.contam.samples) / (1 - fraction.samples)
-    C14.true.samples <- F14CtoC14(F.true.samples, 0, decimals)[,1]
+    C14.true.samples <- F14CtoC14(F.true.samples, 0, roundby=decimals)[,1]
     F.true <- mean(F.true.samples)
     F.true.er <- sd(F.true.samples)
     if(is.na(F.true.er)) { # if errors are 0, then sd(0) gives NA
@@ -306,7 +341,7 @@ clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.
   } else {
       F.true <- (F.obs[,1] - fraction * F.contam) / (1 - fraction)
       F.true.er <- sqrt(F.obs[,2]^2 + F.contam.er^2)
-      C14.true <- F14CtoC14(F.true, er, decimals)
+      C14.true <- F14CtoC14(F.true, er, roundby=decimals)
     }
 
   C14.true <- round(C14.true, roundby)
@@ -323,8 +358,9 @@ clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.
       colours <- c(true.col, rep(observed.col, 5), 1, rep(contamination.col, 5), rep(true.col, 7))
       xpos <- eq.x+(cumsum(c(0, strwidth(txt[-length(txt)], cex=eq.size/1.36)))) # txt length
       fnt <- c(rep(1, 14), rep(2, 5)) # last bit has to be bold
+      coors <- par('usr')
       if(length(eq.y) == 0)
-        eq.y <- 1.01*max(c(F.obs[,1], F.true, F.contam))
+        eq.y <- coors[4] - .05*(coors[4]-coors[3])
       for(i in seq_along(txt))
         text(x = xpos[i], y = eq.y, labels = txt[i], col = colours[i], adj = c(0, 0), font=fnt[i], cex=eq.size/1.36)
     }
@@ -344,16 +380,19 @@ clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.
 
 #' @name muck
 #' @title Calculate the amount of muck/contamination to explain an observed C14 age
-#' @description Given an observed and a target radiocarbon age, calculate the amount of contamination required to explain the observed age.
+#' @description Given an observed, a target radiocarbon age and the F14C or amount of contamination, calculate the amount of contamination (or its F14C) required to explain the observed age.
 #' @details Whereas the function takes true/target and observed C14 ages as input and percentage contamination as output, internal calculations are done in the F14C realm and using contamination fractions (between 0 and 1). The central calculation is `frac = (F_obs - F_true) / (F_contam - F_true)`, where `frac` is the fraction of contamination to explain how we went from the observed to the true C14 age, `F_obs` is the observed C14 age in F14C, `F_true` is the true or target age in F14C, `F_contam` is the F value of the contamination. In some extreme cases (e.g., if dividing by zero), the calculation will spit out unexpected results. Messages will be provided in most of these cases.
-#' @return The required contamination (as percentage), as well as a plot
+#' @return The required contamination (as percentage) or the F14C of the contamination, as well as a plot
 #' @param y.obs The observed radiocarbon age
 #' @param y.obs.er The error of the observed radiocarbon age
 #' @param y.target the target radiocarbon age
 #' @param y.target.er The error of the target radiocarbon age. Not taken into account in the calculations.
 #' @param F.contam the F14C of the contamination. Set at 1 for carbon of modern radiocarbon age, at 0 for 14C-free carbon, or anywhere inbetween.
-#' @param F.contam.er The error of the contamination. Defaults to 0.
+#' @param F.contam.er The error of the contamination. Defaults to a very small but >0 value, 0.001\%.
+#' @param perc.contam The percentage of the contamination. By default (\code{perc.contam=NA}), this is the parameter of interest and this is found by setting F.contam to a specified value. If however the value of `perc.contam` is set, then the function will calculate the F14C of the contamination instead.
+#' @param perc.contam.er The error of the percentage of contamination. Defaults to a very small but >0 value, 0.001\%.
 #' @param MC Whether or not to use Monte Carlo iterations to estimate the values. Defaults to TRUE, because it treats uncertainties better than if set to FALSE.
+#' @param seed For reproducibility, a seed can be set (e.g., \code{seed=123}). Defaults to NA, no seed set.
 #' @param its Amount of iterations to use if MC=TRUE. Defaults to 10,000.
 #' @param roundby Rounding of the output for C14 ages. Defaults to 1 decimal.
 #' @param decimals Rounding of the output. Since details matter here, the default is to provide 5 decimals.
@@ -361,7 +400,7 @@ clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.
 #' @param talk Whether or not to report the calculations made
 #' @param eq.x Leftmost location of the equation. Defaults to \code{eq.x=5}. Can be set to values outside of (0,100) to make the equation invisible.
 #' @param eq.y Vertical location of the equation. Defaults to the top of the graph.
-#' @param eq.size Size of the font of the equation. In case the equation gets jumbled up upon resizing of a graphical device, just issue the previous `clean` command again. Defaults to \code{eq.size=0.8}.
+#' @param eq.size Size of the font of the equation. In case the equation gets jumbled up upon resizing of a graphical device, just issue the previous `muck` command again. Defaults to \code{eq.size=0.8}.
 #' @param talk Whether or not to report the calculations made. Defaults to \code{talk=TRUE}.
 #' @param target.col Colour for the target/true values. Defaults to darkgreen.
 #' @param observed.col Colour for the observed values. Defaults to blue.
@@ -377,9 +416,12 @@ clean <- function(y, er=0, percentage, percentage.error=0, F.contam=1, F.contam.
 #' @param bty Draw a box around a box of a certain shape. Defaults to \code{bty="u"}.
 #' @author Maarten Blaauw
 #' @examples
+#' # observed age 600 +- 30, target age 2000 +- 0, contamination F 1 +- 0.01
 #'   muck(600, 30, 2000, 0, 1, .01)
+#' # assuming we need to find the F14C of a 10\% contamination
+#'   muck(600, 30, 800, 30, perc.contam=10)
 #' @export
-muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.contam.er=0, MC=TRUE, its=1e4, roundby=1, decimals=3, visualise=TRUE, talk=TRUE, eq.x=5, eq.y=c(), eq.size=0.8, target.col="darkgreen", observed.col="blue", contamination.col="red", target.pch=20, observed.pch=18, contamination.pch=17, true.name="target", xlab="contamination (%)", ylab="F14C", ylim=c(), C14.axis=TRUE, bty="u") {
+muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.contam.er=0.001, perc.contam=NA, perc.contam.er=0.001, MC=TRUE, seed=NA, its=1e4, roundby=1, decimals=3, visualise=TRUE, talk=TRUE, eq.x=5, eq.y=c(), eq.size=0.8, target.col="darkgreen", observed.col="blue", contamination.col="red", target.pch=20, observed.pch=18, contamination.pch=17, true.name="target", xlab="contamination (%)", ylab="F14C", ylim=c(), C14.axis=TRUE, bty="u") {
   F.obs <- C14toF14C(y.obs, y.obs.er)
   F.target <- C14toF14C(y.target, y.target.er)
   if(F.target[1] == F.contam)
@@ -403,36 +445,76 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
     stop("F.contam cannot be smaller than 0", call.=FALSE)
 
   if(MC) {
-    if(all(y.obs.er == 0)) # then waste no time sampling
-      F.observed.samples <- F.obs[1,1] else
-        F.observed.samples <- rnorm(its, F.obs[,1], F.obs[,2])
-    if(all(y.target.er == 0)) # then waste no time sampling
-      F.target.samples <- F.target[1,1] else
-        F.target.samples <- rnorm(its, F.target[,1], F.target[,2])
-    if(all(F.contam.er == 0)) # then waste no time sampling
-      F.contam.samples <- F.contam[1] else
-        F.contam.samples <- rnorm(its, F.contam, F.contam.er)
+    if(!is.na(seed))
+      if(is.numeric(seed))
+        set.seed(seed) else
+          message("seed has to be numeric")	  	  
 
-    frac <- ((F.observed.samples - F.target.samples) / (F.contam.samples - F.target.samples))
-    if(any(frac < 0) || any(frac > 1))
-      message("Some strange results here... this muck is a mock")
+    safe_sample <- function(mean, sd, n) 
+      if(all(sd == 0))
+        rep(mean[1], n) else 
+          rnorm(n, mean, sd)
 
-    if(length(frac) < 10)
-      stop("too few valid samples after filtering. Increase 'its'", call.=FALSE)
-    perc.sd <- round(sd(100*frac), roundby)
-    perc <- round(mean(100*frac), roundby)
-    if(is.na(perc.sd)) # when all errors are 0, sd(0) becomes NA
-      perc.sd <- 0
+    F.observed.samples <- safe_sample(F.obs[,1], F.obs[,2], its)
+    F.target.samples   <- safe_sample(F.target[,1], F.target[,2], its)
+    if(is.na(perc.contam)) {
+      if(all(F.contam.er == 0)) # then waste no time sampling
+         F.contam.samples <- F.contam[1] else
+            F.contam.samples <- rnorm(its, F.contam, F.contam.er)
+    } else 
+        if(perc.contam.er == 0) # then waste no time sampling
+          frac.contam.samples <- perc.contam[1]/100 else
+            frac.contam.samples <- rnorm(its, perc.contam/100, perc.contam.er/100)  
 
-    F.contam <- mean(F.contam.samples)
-    F.contam.er <- sd(F.contam.samples)
-    if(is.na(F.contam.er)) # when all errors are 0, sd(0) becomes NA
-      F.contam.er <- 0
-  } else {
-      # note: these calculations do NOT take into account uncertainties
-      frac <- ((F.obs[,1] - F.target[,1]) / (F.contam - F.target[,1]))
-      perc.sd <- 0
-      perc <- 100*frac
+    if(is.na(perc.contam)) { # then F_contam known and we calculate frac/perc
+      frac <- (F.observed.samples - F.target.samples) / (F.contam.samples - F.target.samples)
+      
+      valid <- F.observed.samples >= 0 & F.target.samples >= 0 & F.contam.samples >= 0 & frac >= 0 & frac <= 1
+      if(length(valid) < 10)
+        stop("too few valid samples after filtering. Change settings", call.=FALSE)
+      F.observed.samples <- F.observed.samples[valid]
+      F.target.samples <- F.target.samples[valid]
+      F.contam.samples <- F.contam.samples[valid]
+      frac <- frac[valid]
+
+      perc.sd <- round(sd(100*frac), roundby)
+      perc <- round(median(100*frac), roundby)
+      if(is.na(perc.sd)) # when all errors are 0, sd(0) becomes NA
+        perc.sd <- 0
+
+      F.contam <- median(F.contam.samples)
+      F.contam.er <- sd(F.contam.samples)
+      if(is.na(F.contam.er)) # when all errors are 0, sd(0) becomes NA
+        F.contam.er <- 0
+    } else { # then frac/perc assumed known; find F_contam
+        F.contam.samples <- F.target.samples + ((F.observed.samples - F.target.samples) / frac.contam.samples)
+        if(length(which(F.contam.samples>0)) < 10)
+          stop("too few valid samples after filtering. Change settings", call.=FALSE)
+
+        valid <- F.observed.samples >= 0 & F.target.samples >= 0 & frac.contam.samples >= 0 & frac.contam.samples <= 1
+        if(length(valid) < 10)
+          stop("too few valid samples after filtering. Change settings", call.=FALSE)
+        F.observed.samples <- F.observed.samples[valid]
+        F.target.samples <- F.target.samples[valid]
+        F.contam.samples <- F.contam.samples[valid]
+        frac.contam.samples <- frac.contam.samples[valid]
+
+        F.contam <- median(F.contam.samples)
+        F.contam.er <- sd(F.contam.samples)
+        if(is.na(F.contam.er))
+          F.contam.er <- 0
+
+        frac <- perc.contam/100
+        perc <- round(perc.contam, roundby)
+        perc.sd <- round(perc.contam.er, roundby)
+      }
+    } else {
+        #frac <- ((F.obs[,1] - F.target[,1]) / (F.contam - F.target[,1]))
+        #F.contam - F.target[,1]) <- (F.obs[,1] - F.target[,1]) / frac
+        frac <- perc.contam
+        perc <- 100*frac
+        perc.sd <- round(perc.contam.er, roundby)
+        F.contam <- F.target[,1] + ((F.obs[,1] - F.target[,1]) / frac)
     }
 
   if(visualise)
@@ -442,32 +524,51 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
         ylim=ylim, xlab=xlab, true.col=target.col, observed.col=observed.col,
         contamination.col=contamination.col, true.pch=target.pch, true.name=true.name,
         observed.pch=observed.pch, contamination.pch=contamination.pch, ylab=ylab, bty=bty, C14.axis=C14.axis)
-      txt <- c("contamination", " = (", round(F.obs[,1], decimals), "-", 
-        round(F.target[,1], decimals), ") / (",
-        round(F.contam, decimals), "-",  round(F.target[,1], decimals), ") = ", 
-        round(mean(frac), decimals))
-      colours <- c(contamination.col, 1, observed.col, 1, target.col, 1, 
-        contamination.col, 1, target.col, 1, contamination.col)
+      if(is.na(perc.contam)) {
+        txt <- c("contam", " = (", round(F.obs[,1], decimals), "-", 
+          round(F.target[,1], decimals), ") / (",
+          round(F.contam, decimals), "-",  round(F.target[,1], decimals), ") = ", 
+          round(median(frac), decimals)) 
+          colours <- c(contamination.col, 1, observed.col, 1, target.col, 1,
+            contamination.col, 1, target.col, 1, contamination.col)
+      } else {
+          txt <- c("F_contam", " = ", round(F.target[,1], decimals), "+((", 
+            round(F.obs[,1], decimals), "-",
+            round(F.target[,1], decimals), ")/",  round(frac, decimals), ") = ", 
+            round(median(F.contam), decimals)) 
+            colours <- c(contamination.col, 1, target.col, 1, observed.col, 1,
+              target.col, 1, contamination.col, 1, contamination.col)
+        }
       xpos <- eq.x+(eq.size*cumsum(c(0, strwidth(txt[-length(txt)])))/.98)
+      coors <- par('usr')
       if(length(eq.y) == 0)
-        eq.y <- 1.01*max(c(F.obs, F.target[,1], F.contam))
+        eq.y <- coors[4] - .05*(coors[4]-coors[3])
       for(i in seq_along(txt))
         text(x = xpos[i], y = eq.y, labels = txt[i], col = colours[i], adj = c(0, 0), cex=eq.size/.98)
     }
 
   F.obs <- round(F.obs, decimals); F.target <- round(F.target, decimals)
-  F.contam <- round(F.contam, decimals); perc <- round(perc, decimals)
+  F.contam <- round(F.contam, decimals); F.contam.er <- round(F.contam.er, decimals)
+  perc <- round(perc, decimals)
 
   if(talk)
     if(length(y.obs) == 1) {
       message("Observed age: ", y.obs, "+-", y.obs.er, " C14 BP (", F.obs[,1], "+-", F.obs[,2], " F14C)")
       message("Target age: ", y.target, " C14 BP (", F.target[,1], " F14C)")
-      message("Calculation: (", F.obs[,1], "-", F.target[,1], ")/(", F.contam, " - ", F.target[,1], ") = ", round(mean(frac), decimals+2))
-      if(MC)
-        message("Contamination required: ", perc, "+-", perc.sd, "%" ) else
-          message("Contamination required: ", perc, "%" )
-      if(perc>100)
-        message("That's >100%, please check your values (is it a postbomb date?)")    
+      if(is.na(perc.contam))
+        message("Calculation: (", F.obs[,1], "-", F.target[,1], ")/(", F.contam, " - ", F.target[,1], ") = ", round(median(frac), decimals+2)) else
+          message("Calculation: ", F.target[,1], " + ((", F.obs[,1], "-", F.target[,1], ") / ", frac, ") = ", round(median(F.contam), decimals+2))
+      if(is.na(perc.contam)) {
+        if(MC)
+          message("Contamination required: ", perc, "+-", perc.sd, "%" ) else
+            message("Contamination required: ", perc, "%" )
+        if(perc>100)
+          message("That's >100%, please check your values (is it a postbomb date?)")
+      } else {
+        if(MC)
+          message("F of contamination: ", F.contam, "+-", F.contam.er)	else
+            message("F of contamination: ", F.contam)
+      }
     }
 
   if(MC)
@@ -487,6 +588,7 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
 #' @param mean The mean of the normal or gamma distribution.
 #' @param sdev The standard deviation of the normal distribution.
 #' @param add The distribution can be added or subtracted. Adding results in ages being pushed to younger age distributions, and subtracting to older ones.
+#' @param seed For reproducibility, a seed can be set (e.g., \code{seed=123}). Defaults to NA, no seed set.
 #' @param n The amount of random values to sample (from both the calibrated distribution and the gamma/normal distribution) to calculate the push. Defaults to \code{n=1e6}.
 #' @param prob The probability for the hpd ranges. Defaults to \code{prob=0.95}.
 #' @param cc Calibration curve to use. Defaults to IntCal20 (\code{cc=1}).
@@ -511,7 +613,7 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
 #' @examples
 #'   push.normal(250, 25, 50, 10)
 #' @export
-push.normal <- function(y, er, mean, sdev, add=TRUE, n=1e6, prob=0.95, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, cc.dir=NULL, normal=TRUE, t.a=3, t.b=4, BCAD=FALSE, cal.lim=c(), calib.col=rgb(0,0,0,.25), pushed.col=rgb(0,0,1,.4), heights=.3, inset=TRUE, inset.col="darkgreen", inset.loc=c(0.6, 0.97, 0.6, 0.97), inset.mar=c(3, 0.5, 0.5, 0.5), inset.mgp=c(2,1,0)) {
+push.normal <- function(y, er, mean, sdev, add=TRUE, seed=NA, n=1e6, prob=0.95, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, cc.dir=NULL, normal=TRUE, t.a=3, t.b=4, BCAD=FALSE, cal.lim=c(), calib.col=rgb(0,0,0,.25), pushed.col=rgb(0,0,1,.4), heights=.3, inset=TRUE, inset.col="darkgreen", inset.loc=c(0.6, 0.97, 0.6, 0.97), inset.mar=c(3, 0.5, 0.5, 0.5), inset.mgp=c(2,1,0)) {
   if(length(y) != 1 || length(er) != 1)
     stop("Please provide one value for both y and er")
   if(length(mean) != 1 || length(sdev) != 1)
@@ -519,6 +621,11 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, n=1e6, prob=0.95, cc=1, pos
 
   y <- y - deltaR
   er <- sqrt(er^2 + deltaSTD^2)
+  
+  if(!is.na(seed))
+    if(is.numeric(seed))
+      set.seed(seed) else
+        message("seed has to be numeric")	  	  
   
   shift <- rnorm(n, mean, sdev) 
   calib <- caldist(y, er, cc=cc, postbomb=postbomb, thiscurve=thiscurve, normalise=TRUE, BCAD=BCAD, cc.dir=cc.dir)
@@ -566,6 +673,7 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, n=1e6, prob=0.95, cc=1, pos
 #' @param mean The mean of the gamma distribution
 #' @param shape The shape of the gamma distribution. If setting this to shape=1, it becomes an exponential distribution.
 #' @param add The distribution can be added or subtracted. Adding results in ages being pushed to younger age distributions, and subtracting to older ones.
+#' @param seed For reproducibility, a seed can be set (e.g., \code{seed=123}). Defaults to NA, no seed set.
 #' @param n The amount of random values to sample (from both the calibrated distribution and the gamma distribution) to calculate the push. Defaults to \code{n=1e6}.
 #' @param prob The probability for the hpd ranges. Defaults to \code{prob=0.95}.
 #' @param cc Calibration curve to use. Defaults to IntCal20 (\code{cc=1}).
@@ -591,7 +699,7 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, n=1e6, prob=0.95, cc=1, pos
 #' @examples
 #'   push.gamma(250, 25, 50, 2, add=FALSE) # subtract a gamma distribution
 #' @export
-push.gamma <- function(y, er, mean, shape, add=TRUE, n=1e6, prob=0.95, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, cc.dir=NULL, is.F=FALSE, normal=TRUE, t.a=3, t.b=4, BCAD=FALSE, cal.lim=c(), calib.col=rgb(0,0,0,.25), pushed.col=rgb(0,0,1,.4), heights=0.3, inset=TRUE, inset.col="darkgreen", inset.loc=c(0.6, 0.97, 0.6, 0.97), inset.mar=c(3, 0.5, 0.5, 0.5), inset.mgp=c(2,1,0)) {
+push.gamma <- function(y, er, mean, shape, add=TRUE, seed=NA, n=1e6, prob=0.95, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, cc.dir=NULL, is.F=FALSE, normal=TRUE, t.a=3, t.b=4, BCAD=FALSE, cal.lim=c(), calib.col=rgb(0,0,0,.25), pushed.col=rgb(0,0,1,.4), heights=0.3, inset=TRUE, inset.col="darkgreen", inset.loc=c(0.6, 0.97, 0.6, 0.97), inset.mar=c(3, 0.5, 0.5, 0.5), inset.mgp=c(2,1,0)) {
   if(length(y) != 1 || length(er) != 1)
     stop("Please provide one value for both y and er")
   if(length(mean) != 1 || length(shape) != 1)
@@ -599,6 +707,11 @@ push.gamma <- function(y, er, mean, shape, add=TRUE, n=1e6, prob=0.95, cc=1, pos
 
   y <- y - deltaR
   er <- sqrt(er^2 + deltaSTD^2)
+  
+  if(!is.na(seed))
+    if(is.numeric(seed))
+      set.seed(seed) else
+        message("seed has to be numeric")	  	  
   
   shift <- rgamma(n, shape, shape/mean)
   calib <- caldist(y, er, cc=cc, postbomb=postbomb, thiscurve=thiscurve, normalise=TRUE, BCAD=BCAD, cc.dir=cc.dir, is.F=is.F)

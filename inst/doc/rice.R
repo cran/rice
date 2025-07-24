@@ -64,6 +64,9 @@ F14CtoD14C(0.71, t=4000)
 C14toD14C(152, t=4000)
 D14CtoC14(592, t=4000)
 
+## ----fig.width=5, fig.asp=1---------------------------------------------------
+draw.CF(50000, 3000) 
+
 ## ----fig.width=8, fig.asp=.6--------------------------------------------------
 fromto(100, "calBP")
 
@@ -103,7 +106,7 @@ spread(shroud$y,shroud$er)
 span(700, 20, 750, 20)
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
-y <- c(3820, 4590-90) 
+y <- c(3820, 4430+90)
 er <- c(40, sqrt(40^2 + 25^2)) 
 cc <- c(1,2)
 overlap(y, er, cc=cc)
@@ -124,6 +127,9 @@ muck(591, 30, BCADtoC14(40)[,1], 0, 1)
 perFaith <- BCADtoC14(40)
 repairF <- BCADtoF14C(1400)
 muck(591, 30, perFaith[,1], perFaith[,2], repairF[,1], repairF[,2])
+
+## ----fig.width=5, fig.asp=.8--------------------------------------------------
+muck(500, 20, 600, 25, perc.contam=10)
 
 ## ----fig.width=6, fig.asp=.8--------------------------------------------------
 real.14C <- seq(0, 50e3, length=200)
@@ -198,6 +204,9 @@ shells.mean(myshells)
 ## ----fig.width=5, fig.asp=1---------------------------------------------------
 myshells <- find.shells(120, 10, 20)
 shells.mean(myshells, distance=TRUE)
+
+## ----fig.width=5, fig.asp=1, eval=FALSE---------------------------------------
+# find.shells(120, 10, 50, browse=TRUE)
 
 ## ----fig.width=4, fig.asp=1---------------------------------------------------
 set.seed(123)

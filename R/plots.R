@@ -17,6 +17,7 @@
 #' @param cal.lab The labels for the calendar axis (default \code{age.lab="cal BP"} or \code{"BC/AD"} if \code{BCAD=TRUE}), or to \code{age.lab="kcal BP"} etc. if ka=TRUE.
 #' @param cal.rev Reverse the calendar axis. 
 #' @param c14.lab Label for the C-14 axis. Defaults to 14C BP (or 14C kBP if ka=TRUE).
+#' @param cc2.lab Label for the righthand axis (if present). Defaults to the chosen realm.
 #' @param c14.lim Axis limits for the C-14 axis. Calculated automatically by default. 
 #' @param c14.rev Reverse the C-14 axis.
 #' @param ka Use kcal BP (and C14 kBP).
@@ -27,6 +28,8 @@
 #' @param cc2.fill Colour of the calibration curve (fill), if activated (default cc2=NA).
 #' @param add Whether or not to add the curve(s) to an existing plot. Defaults to FALSE, which draws a new plot.
 #' @param bty Draw a box around a box of a certain shape. Defaults to \code{bty="l"}.
+#' @param mar Plot margins (amount of white space along edges of axes 1-4). Defaults to give more white space if a second y-axis is to be plotted.
+#' @param mgp Axis text margins (where should titles, labels and tick marks be plotted).
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param legend Location of the legend (only activated if more than one curve is plotted). Plotted in the topleft corner by default. Use \code{legend=c()} to leave empty
 #' @param ... Any additional optional plotting parameters. 
@@ -36,7 +39,7 @@
 #' draw.ccurve(1800, 2020, BCAD=TRUE, cc2="nh1", cc2.postbomb=TRUE)
 #' draw.ccurve(1800, 2010, BCAD=TRUE, cc2="nh1", add.yaxis=TRUE)
 #' @export
-draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb=FALSE, cc2.postbomb=FALSE, BCAD=FALSE, realm="C14", as.F=FALSE, as.pMC=FALSE, as.D=FALSE, realm2=c(), cal.lab=NA, cal.rev=FALSE, c14.lab=NA, c14.lim=NA, c14.rev=FALSE, ka=FALSE, add.yaxis=FALSE, cc1.col=rgb(0,0,1,.5), cc1.fill=rgb(0,0,1,.2), cc2.col=rgb(0,.5,0,.5), cc2.fill=rgb(0,.5,0,.2), add=FALSE, bty="l", cc.dir=NULL, legend="topleft", ...) {
+draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb=FALSE, cc2.postbomb=FALSE, BCAD=FALSE, realm="C14", as.F=FALSE, as.pMC=FALSE, as.D=FALSE, realm2=c(), cal.lab=c(), cal.rev=FALSE, c14.lab=c(), cc2.lab=c(), c14.lim=c(), c14.rev=FALSE, ka=FALSE, add.yaxis=FALSE, cc1.col=rgb(0,0,1,.5), cc1.fill=rgb(0,0,1,.2), cc2.col=rgb(0,.5,0,.5), cc2.fill=rgb(0,.5,0,.2), add=FALSE, bty="l", mar=c(), mgp=c(), cc.dir=NULL, legend="topleft", ...) {
 
   # checking realm
   if(sum(as.F, as.pMC, as.D) > 1)
@@ -79,7 +82,16 @@ draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb
 
   cc1.pol <- cbind(c(cc.1[,cc.cal], rev(cc.1[,cc.cal])), c(cc.1[,2]-cc.1[,3], rev(cc.1[,2]+cc.1[,3])))
   
+  if(length(mgp) == 0)
+     mgp <- c(2.5,1,0)
+  if(!add.yaxis)
+    if(length(mar) == 0)
+      mar <- c(4,4,1,1)+.1 
+  
   if(!is.na(cc2)) {
+    if(add.yaxis)  
+      if(length(mar) == 0)
+        mar <- c(4,4,1,4)+.1 
     if(length(realm2) == 0)
       realm2 <- realm
     if(cc2.postbomb)
@@ -90,24 +102,35 @@ draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb
     mindat <- cc.2[,cc.cal] >= .9*min(cal1, cal2)
     maxdat <- cc.2[,cc.cal] <= 1.1*max(cal1, cal2)
 
+    if(grepl("c", tolower(realm2)))
+      if(length(cc2.lab) == 0)
+        cc2.lab <- expression(""^14*C~BP)
     if(ka) {
       cc.2[,1] <- cc.2[,1]/1e3
       if(grepl("c", tolower(realm2))) # ka doesn't make sense for F14C, pMC, or D14C
         cc.2[,2:3] <- cc.2[,2:3]/1e3
+      if(length(cc2.lab) == 0)
+        cc2.lab <- expression(""^14*C~kBP)
     }
     if(grepl("f", tolower(realm2))) {
         F <- C14toF14C(cc.2[,2], cc.2[,3])
         cc.2[,2:3] <- F
+        if(length(cc2.lab) == 0)
+          cc2.lab <- expression("F"^14*C)		
       }
     if(grepl("p", tolower(realm2))) {
       p <- C14topMC(cc.2[,2], cc.2[,3])
       cc.2[,2:3] <- p
+      if(length(cc2.lab) == 0)
+        cc2.lab <- "pMC" 
     }
     if(grepl("d", tolower(realm2))) {
       F <- C14toF14C(cc.2[,2], cc.2[,3])
       Dmax <- F14CtoD14C(F[,1]+F[,2], t=cc.2[,1])
       D <- F14CtoD14C(F[,1], t=cc.2[,1])
       cc.2[,2:3] <- cbind(D, Dmax-D)
+      if(length(cc2.lab) == 0)
+        cc2.lab <- expression(Delta^14*C)
     }
 
     cc.2 <- cc.2[which(mindat * maxdat == 1),] # limit to the relevant part of the cc only
@@ -125,7 +148,7 @@ draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb
     cal.lim <- cal.lim/1e3
   
   if(!add) { # then prepare plotting parameters
-    if(is.na(cal.lab))
+    if(length(cal.lab) == 0)
       if(ka) {
         if(BCAD) 
           cal.lab <- "ka BC/AD" else
@@ -134,7 +157,7 @@ draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb
         if(BCAD)
           cal.lab <- "BC/AD" else
             cal.lab <- "cal. yr BP"
-    if(is.na(c14.lab))
+    if(length(c14.lab) == 0)
       if(grepl("p", tolower(realm)))
         c14.lab <- "pMC" else
           if(grepl("f", tolower(realm)))
@@ -144,7 +167,7 @@ draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb
                   if(ka)
                     c14.lab <- expression(""^14*C~kBP) else
                       c14.lab <- expression(""^14*C~BP)
-    if(is.na(c14.lim[1]))
+    if(length(c14.lim) == 0)
       if(is.na(cc2))
         c14.lim <- range(cc1.pol[,2]) else
           if(add.yaxis)
@@ -154,7 +177,7 @@ draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb
       c14.lim <- rev(c14.lim)
 
     # draw the graph and data
-    plot(0, type="n", xlim=cal.lim, xlab=cal.lab, ylim=c14.lim, ylab=c14.lab, bty=bty, ...)
+    plot(0, type="n", xlim=cal.lim, xlab=cal.lab, ylim=c14.lim, ylab=c14.lab, mar=mar, mgp=mgp, bty=bty, ...)
   }
 
   # add the calibration curve
@@ -169,6 +192,7 @@ draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb
       on.exit(par(oldpar))
       par(new=TRUE)
       plot(cc2.pol, type="n", xlim=cal.lim, xlab="", ylab="", bty="n", xaxt="n", yaxt="n")
+	  mtext(cc2.lab, 4, par('mgp')[1], col=cc2.col)
     }
     polygon(cc2.pol, col=cc2.fill, border=NA) # calibration curve
     lines(cc.2[,cc.cal], cc.2[,2]-cc.2[,3], col=cc2.col)
@@ -178,6 +202,7 @@ draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb
     if(length(legend) > 0)
       legend(legend, legend=c(cc1, cc2), text.col=c(cc1.col, cc2.col), bty="n")
   }
+  
   invisible(par("usr")) # for subsequent plot manipulations
 }
 
@@ -249,7 +274,7 @@ draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb
 #' @param deltaSTD Uncertainty of the age offset (1 standard deviation). Can also be provided within option 'reservoir'.
 #' @param bombalert Warn if a date is close to the lower limit of the IntCal curve. Defaults to \code{postbomb=TRUE}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). Defaults to c().
-#' @param as.F Whether or not to calculate ages in the F14C realm. Defaults to \code{as.F=FALSE}, which uses the C14 realm.
+#' @param as.F Whether or not to calculate ages in the F14C realm. Defaults to \code{as.F=TRUE}, since it takes better care of asymmetric distributions and older dates close to the dating limit. If set as \code{as.F=FALSE}, the C14 realm will be used.
 #' @param is.F Use \code{is.F=TRUE} if the date and error are entered as F14C.
 #' @param is.pMC Use \code{is.pMC=TRUE} if the date and error are entered as pMC.
 #' @param reservoir Reservoir age, or reservoir age and age offset as two values (e.g., \code{reservoir=c(100,10)}).
@@ -278,11 +303,15 @@ draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb
 #' @param t.a Value a of the t distribution (defaults to 3).
 #' @param t.b Value b of the t distribution (defaults to 4).
 #' @param rounded Rounding of the percentages of the reported hpd ranges. Defaults to 1 decimal.
-#' @param every Yearly precision of the hpd ranges (defaults to \code{every=1}).
+#' @param round.age Rounding of the uncalibrated 14C age as reported on the plot. Defaults to 0 decimals for 14C ages, 4 for F14C values.
+#' @param round.hpd.ages Rounding of the ages of the hpd ranges. Defaults to 0 decimals.
+#' @param round.hpd.probs Rounding of the percentages of the hpd ranges. Defaults to 1 decimal.
+#' @param every Deprecated. See `rounded`.
 #' @param extend.range Range by which the axes are extended beyond the data limits. Defaults to 5\%.
 #' @param legend.cex Size of the font of the legends. Defaults to 0.8.
 #' @param legend1.loc Where the first legend (with the calibration curve name and the uncalibrated date) is plotted. Defaults to topleft.
 #' @param legend2.loc Where the second legend (with the hpd ranges) is plotted. Defaults to topright.
+#' @param warning.loc Location for any warnings. Defaults to right.
 #' @param print.truncate.warning Whether or not a truncation warning is printed on the plot. Defaults to \code{print.truncate.warning=TRUE}.
 #' @param mgp Axis text margins (where should titles, labels and tick marks be plotted).
 #' @param mar Plot margins (amount of white space along edges of axes 1-4).
@@ -291,7 +320,7 @@ draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb
 #' @param bty Draw a box around the graph ("n" for none, and "l", "7", "c", "u", "]" or "o" for correspondingly shaped boxes).
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param cc.er The error of the calibration curve. Only used for plotting the uncalibrated C14 distribution, which by default only shows the date's uncertainty (the calibration curve uncertainty is indeed taken into account during calibration). If known, the calibration curve's error can be added.
-#' @param every Not used, use yr.steps instead.
+#' @param asymmetric Whether or not to plot the C14 distribution asymmetric. If \code{asymmetric=TRUE} (default), the underlying calculations are done in the F14C realm, then converted to C14 ages for plotting the C14 distribution. 
 #' @param ... Other plotting parameters.
 #' @return A graph of the raw and calibrated C-14 date, the calibrated ranges and, invisibly, the calibrated distribution and hpd ranges.
 #' @examples
@@ -303,7 +332,7 @@ draw.ccurve <- function(cal1=c(), cal2=c(), cc1="IntCal20", cc2=NA, cc1.postbomb
 #' calibrate(age=130, error=10, BCAD=TRUE)
 #' calibrate(4450, 40, reservoir=c(100, 50))
 #' @export
-calibrate <- function(age=2450, error=50, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, bombalert=TRUE, thiscurve=c(), as.F=FALSE, is.F=FALSE, is.pMC=FALSE, reservoir=0, prob=0.95, BCAD=FALSE, ka=FALSE, draw=TRUE, cal.lab=c(), C14.lab=c(), cal.lim=c(), C14.lim=c(), cc.col=rgb(0,.5,0,0.7), cc.fill=rgb(0,.5,0,0.7), date.col="red", dist.col=rgb(0,0,0,0.3), dist.fill=rgb(0,0,0,0.3), hpd.fill=rgb(0,0,0,0.3), dist.height=0.3, dist.float=c(.01, .01), cal.rev=FALSE, yr.steps=FALSE, cc.resample=5, threshold=0.0005, edge=TRUE, normal=TRUE, t.a=3, t.b=4, rounded=1, every=1, extend.range=.05, legend.cex=0.8, legend1.loc="topleft", legend2.loc="topright", print.truncate.warning=TRUE, mgp=c(2,1,0), mar=c(3,3,1,1), xaxs="i", yaxs="i", bty="l", cc.dir=NULL, cc.er=0, ...) {
+calibrate <- function(age=2450, error=50, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, bombalert=TRUE, thiscurve=c(), as.F=TRUE, is.F=FALSE, is.pMC=FALSE, reservoir=0, prob=0.95, BCAD=FALSE, ka=FALSE, draw=TRUE, cal.lab=c(), C14.lab=c(), cal.lim=c(), C14.lim=c(), cc.col=rgb(0,.5,0,0.7), cc.fill=rgb(0,.5,0,0.7), date.col="red", dist.col=rgb(0,0,0,0.3), dist.fill=rgb(0,0,0,0.3), hpd.fill=rgb(0,0,0,0.3), dist.height=0.3, dist.float=c(.01, .01), cal.rev=FALSE, yr.steps=FALSE, cc.resample=5, threshold=0.0005, edge=TRUE, normal=TRUE, t.a=3, t.b=4, rounded=1, round.age=c(), round.hpd.ages=0, round.hpd.probs=1, every=NA, extend.range=.05, legend.cex=0.8, legend1.loc="topleft", legend2.loc="topright", warning.loc="right", print.truncate.warning=TRUE, mgp=c(2,1,0), mar=c(3,3,1,1), xaxs="i", yaxs="i", bty="l", cc.dir=NULL, cc.er=0, asymmetric=TRUE, ...) {
   
   if(is.F && is.pMC)
     stop("Cannot have both is.F=TRUE and is.PMC=TRUE.")
@@ -321,10 +350,10 @@ calibrate <- function(age=2450, error=50, cc=1, postbomb=FALSE, deltaR=0, deltaS
   youngest.cc <- c(95,603,118,0,0) # youngest C14 ages of, respectively, IntCal20, Marine20, SHCal20, and extra entries
   if(any(cc %in% 1:4)) {
     if(is.F) {
-      beyond <- (age + (3*error)) > C14toF14C(youngest.cc)[cc]
+      beyond <- (age + (3*error)) > C14toF14C(youngest.cc[cc])
     } else 
         if(is.pMC) {
-          beyond <- (age + (3*error)) > C14topMC(youngest.cc)[cc]
+          beyond <- (age + (3*error)) > C14topMC(youngest.cc[cc])
         } else
       beyond <- (age - (3*error)) < youngest.cc[cc]
   }
@@ -354,7 +383,7 @@ calibrate <- function(age=2450, error=50, cc=1, postbomb=FALSE, deltaR=0, deltaS
     Cc <- cbind(Cc[,1], C14toF14C(Cc[,2], Cc[,3]), Cc[,cc.cal])
   if(is.pMC) # then also put Cc on the F scale
     Cc <- cbind(Cc[,1], C14topMC(Cc[,2], Cc[,3]), Cc[,cc.cal])
-  
+
   # warn/stop if the date lies (partly) beyond the calibration curve
   if(is.pMC)
     asF <- c(age, error)/100 else
@@ -388,8 +417,17 @@ calibrate <- function(age=2450, error=50, cc=1, postbomb=FALSE, deltaR=0, deltaS
       stop("Cannot calibrate dates beyond the calibration curve!")
   if(border > 0)
     truncate.warning <- TRUE
+  C14.dist <- caldist(age, sqrt(error^2 + cc.er^2), cc=0, BCAD=FALSE, postbomb=FALSE, is.F=is.F, is.pMC=is.pMC, as.F=as.F, normal=normal, t.a=t.a, t.b=t.b)
 
-  C14.dist <- caldist(age, sqrt(error^2 + cc.er^2), cc=0, BCAD=FALSE, postbomb=FALSE) # just to draw a normal dist
+  if(!is.F && !is.pMC)
+    if(asymmetric) { # then calculate in F, followed by translation into C14
+      redo.as.F <- as.numeric(C14toF14C(age, error)) # not taking into account cc's errors
+      F.dist <- caldist(redo.as.F[1], redo.as.F[2], cc=0, BCAD=FALSE, postbomb=FALSE)
+      F.dist <- F.dist[!is.nan(F.dist[,1]),] # remove non-numbers
+      F.dist <- F.dist[F.dist[,1]>=0,] # also remove F < 0
+      C14.dist <- cbind(F14CtoC14(F.dist[,1], c()), F.dist[,2])
+  }
+
   cal.dist <- caldist(age, error, cc=cc, yrsteps=yr.steps, threshold=threshold,
   normal=normal, is.F=is.F, is.pMC=is.pMC, as.F=as.F, t.a=t.a, t.b=t.b, postbomb=postbomb, cc.dir=cc.dir, BCAD=BCAD)
 
@@ -414,7 +452,7 @@ calibrate <- function(age=2450, error=50, cc=1, postbomb=FALSE, deltaR=0, deltaS
           cc.min <- max(1, min(which(Cc[,1] >= min(cal.lim))))
           cc.max <- min(nrow(Cc), max(which(Cc[,1] <= max(cal.lim))))
         }
-      # we don't need the entire calibration curve
+      # don't draw the entire calibration curve
       Cc <- Cc[cc.min:cc.max,]
       if(BCAD)
         cc.lim <- extendrange(c(Cc[,2]-Cc[,3], Cc[,2]+Cc[,3]), f=extend.range) else
@@ -431,7 +469,7 @@ calibrate <- function(age=2450, error=50, cc=1, postbomb=FALSE, deltaR=0, deltaS
       dist.float[2] <- dist.float[1] 
     callim <- cal.lim[1]+dist.float[2]*(cal.lim[2]-cal.lim[1])
     cclim <- cc.lim[1]+dist.float[1]*(cc.lim[2]-cc.lim[1])
-  
+
     # adapt axis titles, labels and hpds if BCAD and/or ka
     if(length(cal.lab) == 0)
       if(ka) 
@@ -450,36 +488,52 @@ calibrate <- function(age=2450, error=50, cc=1, postbomb=FALSE, deltaR=0, deltaS
 
     plot(0, type="n", xlim=cal.lim, ylim=cc.lim, xlab=cal.lab, ylab=C14.lab, xaxt="n", yaxt="n", xaxs=xaxs, yaxs=yaxs, bty=bty, mgp=mgp, mar=mar)
     if(ka) {
-      axis(1, pretty(cal.lim), labels=pretty(cal.lim/1e3))
-      axis(2, pretty(cc.lim), labels=pretty(cc.lim/1e3))
+      axis(1, pretty(cal.lim), labels=pretty(cal.lim)/1e3)
+      axis(2, pretty(cc.lim), labels=pretty(cc.lim)/1e3)
     } else {
-       axis(1)
-       axis(2)
+        axis(1)
+        axis(2)
     }
-
     # draw the data
     coors <- par('usr')
     polygon(ccpol, border=cc.col, col=cc.fill)
-    draw.dist(C14.dist, on.y=TRUE, x.pos=callim, as.unit=FALSE, fraction=dist.height, mirror=FALSE, up=TRUE, peak=TRUE, prob=prob, BCAD=BCAD, hpd.border=NA, hpd.col=hpd.fill, dist.col=dist.fill, dist.border=dist.col)
+
+    C14.hpds <- draw.dist(C14.dist, on.y=TRUE, x.pos=callim, as.unit=FALSE, fraction=dist.height, mirror=FALSE, up=TRUE, peak=TRUE, prob=prob, BCAD=BCAD, hpd.border=NA, hpd.col=hpd.fill, dist.col=dist.fill, dist.border=dist.col)
     dot <- ifelse(cal.rev, min(lims), callim)
     points(dot, age, col=date.col, pch=20)
     segments(dot, age-error, dot, age+error, col=date.col)
-    hpds <- draw.dist(cal.dist, on.y=FALSE, y.pos=cclim, as.unit=FALSE, fraction=dist.height, mirror=FALSE, up=TRUE, peak=TRUE, prob=prob, BCAD=BCAD, hpd.border=NA, hpd.col=hpd.fill, dist.col=dist.fill, dist.border=dist.col)
+
+    hpds <- draw.dist(cal.dist, on.y=FALSE, y.pos=cclim, as.unit=FALSE, fraction=dist.height, mirror=FALSE, up=TRUE, peak=TRUE, prob=prob, BCAD=BCAD, hpd.border=NA, hpd.col=hpd.fill, dist.col=dist.fill, dist.border=dist.col, age.round=round.hpd.ages, prob.round=round.hpd.probs)
 
     # legends
-    if(cc == 1)
-      cc <- "IntCal20 " else
-        if(cc == 2)
-          cc <- "Marine20 " else
-            if(cc == 3)
-              cc <- "SHCal20 "
-    legend(legend1.loc, legend=c(cc, paste(age, "\u00B1", error)), text.col=c(cc.col, 1),  ncol=1, bty="n", cex=legend.cex)
-    legend(legend2.loc, legend=rbind(c("from", "to", "%"), cbind(round(hpds, rounded))), ncol=3, bty="n", cex=legend.cex)
+    if(cc %in% 0:4)
+      cc.name <- switch(cc, "IntCal20", "Marine20", "SHCal20") else
+        cc.name <- cc
+    if(length(round.age)==0)
+      if(is.F)
+        round.age <- 4 else
+         round.age <- 0
+    if(length(round.hpd.ages)==0)
+      round.hpd.ages <- 0
+    if(length(round.hpd.probs)==0)
+      round.hpd.probs <- 1
+
+    C14.label <- c(cc.name, 
+      paste(format(round(age, round.age), scientific=FALSE, nsmall=round.age), "\u00B1",
+      format(round(error, round.age), scientific=FALSE, nsmall=round.age)))
+    legend(legend1.loc, legend=C14.label, text.col=c(cc.col, 1),  ncol=1, bty="n", cex=legend.cex)
+
+    hpds[,1:2] <- format(round(hpds[,1:2], round.hpd.ages), nsmall=round.hpd.ages)
+    hpds[,3] <- format(round(hpds[,3], round.hpd.probs), nsmall=round.hpd.probs)
+
+    colnames(hpds)[3] <- "%"
+    print.hpds <- rbind(colnames(hpds), apply(hpds, 2, as.character))
+    legend(legend2.loc, legend=print.hpds, ncol=3, cex=legend.cex, bty="n")
   }
   
   if(truncate.warning)
     if(print.truncate.warning)
-      legend("right", "Warning! Date truncated ", text.col="red", bty="n", cex=legend.cex, xjust=1)
+      legend(warning.loc, "Warning! Date truncated ", text.col="red", bty="n", cex=legend.cex, xjust=1)
   
   invisible(list(calib=cal.dist, hpd=hpds))
 }
@@ -487,7 +541,7 @@ calibrate <- function(age=2450, error=50, cc=1, postbomb=FALSE, deltaR=0, deltaS
 
 
 # internal function to draw distributions
-draw.dist <- function(dist, on.y=FALSE, rotate.axes=FALSE, mirror=FALSE, up=TRUE, hpd=TRUE, ka=FALSE, prob=0.95, prob.round=1, BCAD=FALSE, x.pos=c(), y.pos=c(), ex=1, peak=TRUE, as.unit=FALSE, fraction=0.1, dist.col=rgb(0,0,1,0.3), dist.border=rgb(0,0,1,0.3), hpd.col=rgb(0,0,1,0.3), hpd.border=rgb(0,0,1,0.3)) {
+draw.dist <- function(dist, on.y=FALSE, rotate.axes=FALSE, mirror=FALSE, up=TRUE, hpd=TRUE, ka=FALSE, prob=0.95, age.round=0, prob.round=1, BCAD=FALSE, x.pos=c(), y.pos=c(), ex=1, peak=TRUE, as.unit=FALSE, fraction=0.1, dist.col=rgb(0,0,1,0.3), dist.border=rgb(0,0,1,0.3), hpd.col=rgb(0,0,1,0.3), hpd.border=rgb(0,0,1,0.3)) {
 
   ages0 <- c(dist[1,1], dist[,1], dist[nrow(dist),1])
   agesmirror <- c(dist[,1], rev(dist[,1]))
@@ -527,16 +581,19 @@ draw.dist <- function(dist, on.y=FALSE, rotate.axes=FALSE, mirror=FALSE, up=TRUE
     polygon(pol, col=dist.col, border=dist.border)
 
   if(hpd) {
-    hpds <- hpd(dist, return.raw=TRUE, BCAD=BCAD, prob=prob, prob.round=prob.round, ka=ka)
+    hpds <- hpd(dist, return.raw=TRUE, BCAD=BCAD, prob=prob, age.round=age.round, prob.round=prob.round, ka=ka)
     hpds.raw <- hpds$calib
     hpds <- hpds$hpds
 
     for(i in 1:nrow(hpds)) {
-      thisdist <- (dist[,1] >= min(hpds[i,1:2])) * (dist[,1] <= max(hpds[i,1:2]))
-      thisdist <- dist[which(thisdist == 1),]
+      sel <- dist[,1] >= min(hpds[i,1:2]) & dist[,1] <= max(hpds[i,1:2])
+      thisdist <- dist[sel, , drop=FALSE]
 
-      if(length(thisdist) == 2) # then just 1 row
-        thisdist <- rbind(c(thisdist[1],0), thisdist, c(thisdist[1], 0))
+      if(nrow(thisdist) == 0)
+        next  # skip to the next hpd if there's no overlap
+      if(nrow(thisdist) == 1)
+        thisdist <- rbind(c(thisdist[1,1], 0), thisdist, c(thisdist[1,1], 0))
+
       ages0 <- c(thisdist[1,1], thisdist[,1], thisdist[nrow(thisdist),1])
       agesmirror <- c(thisdist[,1], rev(thisdist[,1]))
       dist0 <- ex*c(0, thisdist[,2], 0)
@@ -806,6 +863,98 @@ draw.dates <- function(age, error, depth=c(), cc=1, postbomb=FALSE, deltaR=0, de
 
 
 
+#' @name draw.CF
+#' @title Draw the asymmetric relationship between 14C and F14C
+#' @description Whereas distributions on the F14C scale are symmetric, this is not the case for distributions on the 14C scale. Indeed, errors are skewed toward older ages, especially for dates with large uncertainties (e.g., older dates). This function takes a C14 date, calculates its distribution on the F scale (which is a value much closer to what is actually measured in AMS or radiometric dating), then takes that distribution and for each F value calculates the corresponding C14 age, and reports both the plus and minus errors. 
+#' @details Large positive errors (e.g., much larger than the minus error) indicate a highly skewed age, with the upper tail essentially extending to infinite ages. Note that for older and uncertain ages, the F14C distribution will be truncated at 0 (since negative F14C values can't happen). 
+#' C14 ages are turned into F using exp(-y/8033), whereas they are turned back into C14 ages using y = -8033 * ln(F). For more details, e.g. on how errors/uncertainties are treated, see \link{F14CtoC14} and \link{C14toF14C}.
+#' @return A plot of the F14C and C14 distributions together with a black curve showing the F/C relation, and estimates of the + and - errors (invisible).
+#' @param y The mean of the radiocarbon age (on the 14C scale).
+#' @param er The error of the radiocarbon age (on the 14C scale).
+#' @param normal Use the normal distribution to calibrate dates (default TRUE). The alternative is to use the t model (Christen and Perez 2009).
+#' @param t.a Value a of the t distribution (defaults to 3).
+#' @param t.b Value b of the t distribution (defaults to 4).
+#' @param height Heights of the distributions. Defaults to 1.
+#' @param extend.axes Multiplication factor by which the axes should be extended. Defaults to 0.1, 10\%.
+#' @param dist.res Number of bins of the distributions (defaults to 5000).
+#' @param C14.lim Limits for the C-14 axis. Calculated automatically by default.
+#' @param F.lim Axis limits for the F14C axis. Calculated automatically by default.
+#' @param x.pos Amount by which the C14 distribution floats on the y-axis.
+#' @param y.pos Amount by which the F14C distribution floats on the x-axis.
+#' @param C14.col Colour of the C14 distribution. Defaults to semi-transparent blue, \code{rgb(0,0,1,.2)}.
+#' @param F.col Colour of the F14C distribution. Defaults to semi-transparent green, \code{rgb(0,.5,0,.2)}.
+#' @param draw.date Whether or not to also draw the original date (as dot and 1 sigma error bars).
+#' @param date.col Colour of the date. Defaults to red.
+#' @param legend.pos Position of the legend. Defaults to "top".
+#' @param legend.size Size of the font of the legend. Defaults to 0.7. 
+#' @param roundby Rounding of the reported values. 
+#' @examples
+#'   draw.CF(2450,50) # precise C14 ages are essentially symmetric
+#'   draw.CF(50000,2000) # but lower-precision ones aren't!
+#' @export
+draw.CF <- function(y, er, normal=TRUE, t.a=3, t.b=4, height=1, extend.axes=.1, dist.res=5e3, C14.lim=c(), F.lim=c(), x.pos=c(), y.pos=c(), C14.col=rgb(0,0,1, .2), F.col=rgb(0,.5,0,.2), draw.date=TRUE, date.col="red", legend.pos="top", legend.size=.7, roundby=0) {
+  if(!length(y) == 1)
+    stop("one value should be provided for 'y'")
+  if(!length(er) == 1)	
+    stop("one value should be provided for 'er'")	
+  
+  C14.dist <- caldist(y, er, cc=0, normal=normal, t.a=t.a, t.b=t.b, cc0.res=dist.res)
+  y.as.F <- unname(unlist(C14toF14C(y, er)))
+  F.dist <- caldist(y.as.F[1], y.as.F[2], cc=0, normal=normal, t.a=t.a, t.b=t.b, cc0.res=dist.res)
+  F.dist <- F.dist[!is.nan(F.dist[,1]),] # remove non-numbers
+  F.dist <- F.dist[F.dist[,1]>=0,] # also remove F < 0
+  C14.dist <- cbind(F14CtoC14(F.dist[,1], c()), F.dist[,2])
+  C14.dist[,2] <- C14.dist[,2]/max(C14.dist[,2])
+
+  # plot limits
+  if(length(C14.lim) == 0)
+    C14.lim <- extendrange(C14.dist[,1], f=extend.axes)
+  if(length(F.lim) == 0) {
+    F.lim <- extendrange(F.dist[,1], f=extend.axes)
+    F.lim[F.lim < 0] <- 0 # no negative Fs
+  }
+  plot(0, type="n", xlim=F.lim, ylim=C14.lim, xlab="F14C", ylab="C14 (BP)")
+
+  coors <- par('usr')
+  if(length(x.pos) == 0)
+    x.pos <- coors[1] + (coors[2]-coors[1])/50
+  if(length(y.pos) == 0)
+    y.pos <- coors[3] + (coors[4]-coors[3])/100
+
+  if(draw.date) {
+    xpos <- coors[1] + (coors[2]-coors[1])/100
+    segments(xpos, y-er, xpos, y+er, col=date.col, lwd=1.5)
+    points(xpos, y, pch=19, col=date.col)
+  }
+
+  F.hpds <- draw.dist(F.dist, y.pos=y.pos, dist.col=F.col, dist.border=F.col, prob=.68, hpd=F)
+  C.hpds <- draw.dist(C14.dist, on.y=TRUE, x.pos=x.pos, dist.col=C14.col, dist.border=C14.col, prob=.68, hpd=F)
+  x <- seq(1e-6, coors[2], length=1e3)
+  lines(x, -8033 * log(x), lwd=2, col=grey(.3)) # the relation between F and C
+  Fplus <- y.as.F[1]+y.as.F[2]
+  Fmin <- y.as.F[1]-y.as.F[2]
+  FplustoC <- -8033 * log(Fplus)
+  FmintoC <- -8033 * log(Fmin)
+  segments(Fplus, y.pos, Fplus, FplustoC, lwd=.5, col=grey(.1), lty=3)
+  segments(Fplus, FplustoC, coors[1], FplustoC, lwd=.5, col=grey(.1), lty=3)
+  segments(Fmin, y.pos, Fmin, FmintoC, lwd=.5, col=grey(.1), lty=3)
+  segments(Fmin, FmintoC, coors[1], FmintoC, lwd=.5, col=grey(.1), lty=3)
+    
+  back.to.y <- F14CtoC14(c(Fmin, y.as.F[1], Fplus))
+  erplus <- round(back.to.y[1]-back.to.y[2], roundby)
+  ermin <- round(back.to.y[2]-back.to.y[3], roundby)
+  y.as.F <- round(y.as.F, roundby+4)
+  if(!is.na(legend.pos)) {
+    txt <- c(bquote(""*.(y) %+-% .(er) ~ "BP"),  
+      bquote(""%->%.(y.as.F[1]) %+-% .(y.as.F[2]) ~ F^{14}*C),
+      bquote(""%->%.(y)~"(+"*.(abs(erplus)) ~", -"*.(abs(ermin))*") BP"))
+    legend(legend.pos, legend=txt, bty="n", cex=legend.size)  
+  }
+
+  invisible(c(plus=erplus, min=ermin))
+}
+
+
 #' @name draw.D14C
 #' @title Draw d14C and the calibration curve.
 #' @description Draw a proxy of the atmospheric 14C concentration (d14C) as well as the calibration curve.
@@ -858,8 +1007,9 @@ draw.D14C <- function(cal1=c(), cal2=c(), cc=rintcal::ccurve(), BCAD=FALSE, mar=
   cc <- cc[yrmin:yrmax,]
   cc.Fmin <- C14toF14C(cc[,2]+cc[,3])
   cc.Fmax <- C14toF14C(cc[,2]-cc[,3])
-  cc.D14Cmin <- F14CtoD14C(cc.Fmin, t=cc[,1])
-  cc.D14Cmax <- F14CtoD14C(cc.Fmax, t=cc[,1])
+  cc.D14Cmin <- F14CtoD14C(cc.Fmin, t=cc[,1])[,1]
+  cc.D14Cmax <- F14CtoD14C(cc.Fmax, t=cc[,1])[,1]
+
   op <- par(mar=mar, bty=bty, mgp=mgp, xaxs=xaxs, yaxs=yaxs)
   on.exit(par(op))
   kyr <- ifelse(ka, 1e3, 1)
@@ -904,7 +1054,7 @@ draw.D14C <- function(cal1=c(), cal2=c(), cc=rintcal::ccurve(), BCAD=FALSE, mar=
 #' @title Draw contamination impacts
 #' @description Show how contamination with different fractions of modern carbon affect observed C-14 ages.
 #' @return A plot of real and observed (contamination-impacted) C14 ages.
-#' @param from Minimum 14C age for the plot. Defaults to 0
+#' @param from Minimum 14C age for the plot. Defaults to 0.
 #' @param to Maximum 14C age for the plot. Defaults to 50e3.
 #' @param ka Use C14 kBP. Defaults to TRUE.
 #' @param age.res Resolution of age scale. Defaults to 500, which results in smooth curves. Higher numbers will take longer to draw.
@@ -928,8 +1078,8 @@ draw.contamination <- function(from=0, to=50e3, ka=TRUE, age.res=500, xlim=c(), 
   observed.14C <- seq(0, to, by=diff(real.14C)[1])
 
   fraction.contaminated <- function(real, observed, F14C=contam.F14C, decimals=5) {
-    real.F <- C14toF14C(real, rep(0,length(real)), decimals=decimals)[,1]
-    observed.F <- C14toF14C(observed, rep(0,length(real)), decimals=decimals)[,1]
+    real.F <- C14toF14C(real, roundby=decimals)[,1]
+    observed.F <- C14toF14C(observed, roundby=decimals)[,1]
     return((observed.F - real.F ) / (F14C - real.F))
   }
   fractions <- outer(real.14C, observed.14C, fraction.contaminated)

@@ -5,13 +5,15 @@ ocean.map <- function(S, W, N, E, shells=c(), browse=FALSE, mapsize="large", pad
   hassf <- requireNamespace("sf", quietly=TRUE)
   rne <- requireNamespace("rnaturalearth", quietly=TRUE)
   rnedata <- requireNamespace("rnaturalearthdata", quietly=TRUE)
-  devtools <- requireNamespace("devtools", quietly=TRUE)
+  remotes <- requireNamespace("remotes", quietly=TRUE)
   lflt <- requireNamespace("leaflet", quietly=TRUE)
   coper <- requireNamespace("CopernicusMarine", quietly=TRUE)
   hiresmaps <- "rnaturalearthhires" %in% installed.packages() # TRUE or FALSE
 
   if(warn) {
     if(browse) {
+      if(getRversion() < "4.0.0")
+        stop("For browseable maps, R >= 4.0.0 is required. Please update your R installation.")		
       if(!lflt)
         stop("Please install the leaflet package:\ninstall.packages(\"leaflet\")")
       if(!coper)
@@ -29,12 +31,12 @@ ocean.map <- function(S, W, N, E, shells=c(), browse=FALSE, mapsize="large", pad
 
             # rnaturalearthhires is nice but has to be installed from github
             if(!hiresmaps)
-              if(devtools)
+              if(remotes)
                 message("For detailed maps, install rnaturalearthhires from GitHub:\n",
-                  "devtools::install_github('ropensci/rnaturalearthhires')\n") else
-                    message("Install first devtools and then rnaturalearthhires:\n",
-                      "install.packages(\"devtools\")\n",
-                      "devtools::install_github(\"ropensci/rnaturalearthhires\"")
+                  "remotes::install_github('ropensci/rnaturalearthhires')\n") else
+                    message("Install first remotes and then rnaturalearthhires:\n",
+                      "install.packages(\"remotes\")\n",
+                      "remotes::install_github(\"ropensci/rnaturalearthhires\"")
           }
         }
       }
@@ -211,7 +213,7 @@ hav.dist <- function(long1, lat1, long2, lat2) {
 #' @param colour The variable to be plotted as colour. Expects a continuous variable. Defaults to 'dR'.
 #' @param rainbow Whether or not to use a rainbow scale to plot the variable.
 #' @param size Size of the symbols. Defaults to 2.
-#' @param mapsize Resolution of the map. Can be "small" or "large". If the latter, a high-resolution dataset will have to be downloaded using the R package 'rnaturalearthhires'. Since this package is on github but not on CRAN, you will have to download it yourself (using the command devtools::install_github("ropensci/rnaturalearthhires")). Defaults to "small" if 'rnaturalearthhires' is not installed, and to "large" if it is installed.
+#' @param mapsize Resolution of the map. Can be "small" or "large". If the latter, a high-resolution dataset will have to be downloaded using the R package 'rnaturalearthhires'. Since this package is on github but not on CRAN, you will have to download it yourself (using the command remotes::install_github("ropensci/rnaturalearthhires")). Defaults to "small" if 'rnaturalearthhires' is not installed, and to "large" if it is installed.
 #' @param mincol Colour for minimum values.
 #' @param maxcol Colour for maximum values.
 #' @param symbol The variable to be plotted as symbol. Expects a categoric variable. Defaults to 'feeding'.
@@ -233,6 +235,9 @@ find.shells <- function(longitude, latitude, nearest=50, browse=FALSE, colour="d
   if(length(c(longitude,latitude)) != 2)
     stop("we need 1 entry for longitude, 1 for latitude")
 
+  if(!is.logical(currents) || length(currents) != 1)
+    stop("'currents' must be a single TRUE or FALSE")
+  
   shells <- get("shells", envir = .GlobalEnv)
   
   shell_coors <- data.frame(lon=shells$lon, lat=shells$lat)
@@ -250,10 +255,14 @@ find.shells <- function(longitude, latitude, nearest=50, browse=FALSE, colour="d
   E <- max(nearshells$lon)
 
   ocean.map(S, W, N, E, shells=nearshells,
-    mapsize=mapsize, browse=browse, ocean.col=ocean.col, land.col=land.col, rainbow=rainbow, symbol=symbol, symbol.legend=symbol.legend, legend.loc=legend.loc, legend.size=legend.size, mincol=mincol, maxcol=maxcol, colour=colour, warn=warn, padding=padding)
+    mapsize=mapsize, browse=browse, ocean.col=ocean.col, land.col=land.col,
+    rainbow=rainbow, symbol=symbol, symbol.legend=symbol.legend, 
+	legend.loc=legend.loc, legend.size=legend.size, 
+	mincol=mincol, maxcol=maxcol, colour=colour, 
+	warn=warn, padding=padding)
   
   if(interactive())
-    if(currents) {
+    if(isTRUE(currents)) {
       if(E < W) E <- E + 360
       width <- hav.dist(W, (S+N)/2, E, (S+N)/2)
       height <- hav.dist((W+E)/2, S, (W+E)/2, N)
@@ -264,13 +273,9 @@ find.shells <- function(longitude, latitude, nearest=50, browse=FALSE, colour="d
       if(answer == "y") {
         latitude  <- round((S + N) / 2, 3)
         longitude <- round((W + E) / 2, 3)
-         browseURL(paste0("https://earth.nullschool.net/#current/ocean/surface/currents/orthographic=",
+        browseURL(paste0("https://earth.nullschool.net/#current/ocean/surface/currents/orthographic=",
           round(longitude, 3), ",", round(latitude, 3), ",", sz))
       }
-# alternative, avoiding NOAA dependency, but steering the zoom level is a bit unclear	 
-#		browseURL(paste0("https://data.marine.copernicus.eu/viewer/expert?view=viewer&crs=epsg%3A4326&t=1749038400000&z=-0.5&center=", 
-#		round(longitude, 3), "%2C", round(latitude, 3), '&zoom=', sz, 
-#		"&layers=H4sIAJAgP2gAAzXOUU_DMBQF4P.SZ7aVwijwhjqVBB0RXxZjbppyh00usLQwh8b.bvew8.ydk.Pxy0gtaMuW5eyp2t8VFRSvRXVoyuZx.7a7L5p3qJ8PwHkIXMQb3WPvoB9b6GiE09ey0rMFNRw18DVPoxY7qMOHVQ.Cc55sHCr4VhNaOCON2kwLC5ibFsJa2cloQsfyyc4YsJ9yaPHCcsEDZq6HgITHNHaNVoQsPypy3hm3u5xotGbobtWzohlfzMBy.8JHShltuZBZmqUyFNlNKD8frYXIeJTEYSy3aSJ59Pf5Dwy5X20IAQAA&basemap=dark")) 	 
     }  
 
   return(nearshells)
@@ -293,7 +298,7 @@ find.shells <- function(longitude, latitude, nearest=50, browse=FALSE, colour="d
 #' @param colour The variable to be plotted as colour. Expects a continuous variable. Defaults to 'dR'.
 #' @param rainbow Whether or not to use a rainbow scale to plot the variable.
 #' @param size Size of the symbols. Defaults to 2.
-#' @param mapsize Resolution of the map. Can be "small" or "large". If the latter, a high-resolution dataset will have to be downloaded using the R package 'rnaturalearthhires'. Since this package is on github but not on CRAN, you will have to download it yourself (using the command devtools::install_github("ropensci/rnaturalearthhires")). Defaults to "small" if 'rnaturalearthhires' is not installed, and to "large" if it is installed.
+#' @param mapsize Resolution of the map. Can be "small" or "large". If the latter, a high-resolution dataset will have to be downloaded using the R package 'rnaturalearthhires'. Since this package is on github but not on CRAN, you will have to download it yourself (using the command remotes::install_github("ropensci/rnaturalearthhires")). Defaults to "small" if 'rnaturalearthhires' is not installed, and to "large" if it is installed.
 #' @param mincol Colour for minimum values.
 #' @param maxcol Colour for maximum values.
 #' @param symbol The variable to be plotted as symbol. Expects a categoric variable. Defaults to 'feeding'. 
@@ -311,32 +316,35 @@ find.shells <- function(longitude, latitude, nearest=50, browse=FALSE, colour="d
 #' @export
 map.shells <- function(S=48, W=-15, N=62, E=5, browse=FALSE, colour="dR", rainbow=FALSE, size=2, mapsize="large", mincol="yellow", maxcol="red", symbol="feeding", symbol.legend=TRUE, ocean.col="aliceblue", land.col=rgb(0, 0.5, 0., 0.6), legend.loc=c(.95, .02), legend.size=c(.05, .2), padding=0.1, warn=TRUE, currents=TRUE) {
   lon <- lat <- NULL # to get rid of subsequent ggplot2-related warnings
-  shells <- get("shells", envir = .GlobalEnv)
+  shells <- get("shells", envir = asNamespace("rice")) # envir was .GlobalEnv
   shells[[symbol]] <- as.factor(shells[[symbol]])
   sel <- shells[shells$lon>=W & shells$lon<=E & shells$lat>=S & shells$lat <= N,]
 
+  if(!is.logical(currents) || length(currents) != 1)
+    stop("'currents' must be a single TRUE or FALSE") 
+
   ocean.map(S, W, N, E, shells=sel,
-    mapsize=mapsize, browse=browse, ocean.col=ocean.col, land.col=land.col, rainbow=rainbow, symbol=symbol, symbol.legend=symbol.legend, legend.loc=legend.loc, legend.size=legend.size, mincol=mincol, maxcol=maxcol, colour=colour, warn=warn, padding=padding)
+    mapsize=mapsize, browse=browse, ocean.col=ocean.col, 
+	  land.col=land.col, rainbow=rainbow, symbol=symbol, 
+	  symbol.legend=symbol.legend, legend.loc=legend.loc, 
+	  legend.size=legend.size, mincol=mincol, maxcol=maxcol, 
+	  colour=colour, warn=warn, padding=padding)
   
-    if(interactive())
-      if(currents) {
-        if(E < W) E <- E + 360
-        width <- hav.dist(W, (S+N)/2, E, (S+N)/2)
-        height <- hav.dist((W+E)/2, S, (W+E)/2, N)
-        w <- 10000 * (1000 / width)
-        h <- 10000 * ((1000 / 2) / height) 
-        sz <- max(300, min(5000, ceiling(min(w, h))))
-        answer <- tolower(readline("Do you want to browse a map with ocean currents? [y/N]: "))
-        if(answer == "y") {
-          latitude  <- round((S + N) / 2, 3)
-          longitude <- round((W + E) / 2, 3)
-           browseURL(paste0("https://earth.nullschool.net/#current/ocean/surface/currents/orthographic=",
-            round(longitude, 3), ",", round(latitude, 3), ",", sz))
+  if(interactive())
+    if(isTRUE(currents)) {
+      if(E < W) E <- E + 360
+      width <- hav.dist(W, (S+N)/2, E, (S+N)/2)
+      height <- hav.dist((W+E)/2, S, (W+E)/2, N)
+      w <- 10000 * (1000 / width)
+      h <- 10000 * ((1000 / 2) / height) 
+      sz <- max(300, min(5000, ceiling(min(w, h))))
+      answer <- tolower(readline("Do you want to browse a map with ocean currents? [y/N]: "))
+      if(answer == "y") {
+        latitude  <- round((S + N) / 2, 3)
+        longitude <- round((W + E) / 2, 3)
+        browseURL(paste0("https://earth.nullschool.net/#current/ocean/surface/currents/orthographic=",
+          round(longitude, 3), ",", round(latitude, 3), ",", sz))
         }
-  # alternative, avoiding NOAA dependency, but slow and how to steer the zoom level is a bit unclear
-  # browseURL(paste0("https://data.marine.copernicus.eu/viewer/expert?view=viewer&crs=epsg%3A4326&t=1749038400000&z=-0.5&center=", 
-  #		round(longitude, 3), "%2C", round(latitude, 3), '&zoom=', sz,
-  #		"&layers=H4sIAJAgP2gAAzXOUU_DMBQF4P.SZ7aVwijwhjqVBB0RXxZjbppyh00usLQwh8b.bvew8.ydk.Pxy0gtaMuW5eyp2t8VFRSvRXVoyuZx.7a7L5p3qJ8PwHkIXMQb3WPvoB9b6GiE09ey0rMFNRw18DVPoxY7qMOHVQ.Cc55sHCr4VhNaOCON2kwLC5ibFsJa2cloQsfyyc4YsJ9yaPHCcsEDZq6HgITHNHaNVoQsPypy3hm3u5xotGbobtWzohlfzMBy.8JHShltuZBZmqUyFNlNKD8frYXIeJTEYSy3aSJ59Pf5Dwy5X20IAQAA&basemap=dark")) 	 
       } 
   
   return(sel)

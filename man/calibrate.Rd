@@ -13,7 +13,7 @@ calibrate(
   deltaSTD = 0,
   bombalert = TRUE,
   thiscurve = c(),
-  as.F = FALSE,
+  as.F = TRUE,
   is.F = FALSE,
   is.pMC = FALSE,
   reservoir = 0,
@@ -42,11 +42,15 @@ calibrate(
   t.a = 3,
   t.b = 4,
   rounded = 1,
-  every = 1,
+  round.age = c(),
+  round.hpd.ages = 0,
+  round.hpd.probs = 1,
+  every = NA,
   extend.range = 0.05,
   legend.cex = 0.8,
   legend1.loc = "topleft",
   legend2.loc = "topright",
+  warning.loc = "right",
   print.truncate.warning = TRUE,
   mgp = c(2, 1, 0),
   mar = c(3, 3, 1, 1),
@@ -55,6 +59,7 @@ calibrate(
   bty = "l",
   cc.dir = NULL,
   cc.er = 0,
+  asymmetric = TRUE,
   ...
 )
 }
@@ -75,7 +80,7 @@ calibrate(
 
 \item{thiscurve}{As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). Defaults to c().}
 
-\item{as.F}{Whether or not to calculate ages in the F14C realm. Defaults to \code{as.F=FALSE}, which uses the C14 realm.}
+\item{as.F}{Whether or not to calculate ages in the F14C realm. Defaults to \code{as.F=TRUE}, since it takes better care of asymmetric distributions and older dates close to the dating limit. If set as \code{as.F=FALSE}, the C14 realm will be used.}
 
 \item{is.F}{Use \code{is.F=TRUE} if the date and error are entered as F14C.}
 
@@ -133,7 +138,13 @@ calibrate(
 
 \item{rounded}{Rounding of the percentages of the reported hpd ranges. Defaults to 1 decimal.}
 
-\item{every}{Not used, use yr.steps instead.}
+\item{round.age}{Rounding of the uncalibrated 14C age as reported on the plot. Defaults to 0 decimals for 14C ages, 4 for F14C values.}
+
+\item{round.hpd.ages}{Rounding of the ages of the hpd ranges. Defaults to 0 decimals.}
+
+\item{round.hpd.probs}{Rounding of the percentages of the hpd ranges. Defaults to 1 decimal.}
+
+\item{every}{Deprecated. See `rounded`.}
 
 \item{extend.range}{Range by which the axes are extended beyond the data limits. Defaults to 5\%.}
 
@@ -142,6 +153,8 @@ calibrate(
 \item{legend1.loc}{Where the first legend (with the calibration curve name and the uncalibrated date) is plotted. Defaults to topleft.}
 
 \item{legend2.loc}{Where the second legend (with the hpd ranges) is plotted. Defaults to topright.}
+
+\item{warning.loc}{Location for any warnings. Defaults to right.}
 
 \item{print.truncate.warning}{Whether or not a truncation warning is printed on the plot. Defaults to \code{print.truncate.warning=TRUE}.}
 
@@ -158,6 +171,8 @@ calibrate(
 \item{cc.dir}{Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.}
 
 \item{cc.er}{The error of the calibration curve. Only used for plotting the uncalibrated C14 distribution, which by default only shows the date's uncertainty (the calibration curve uncertainty is indeed taken into account during calibration). If known, the calibration curve's error can be added.}
+
+\item{asymmetric}{Whether or not to plot the C14 distribution asymmetric. If \code{asymmetric=TRUE} (default), the underlying calculations are done in the F14C realm, then converted to C14 ages for plotting the C14 distribution.}
 
 \item{...}{Other plotting parameters.}
 }
