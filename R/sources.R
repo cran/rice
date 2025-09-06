@@ -61,7 +61,7 @@ fractions <- function(bulk_age=NULL, bulk_er=NULL, fractions_percC=NULL, fractio
     # we need fractions_percC, fractions_weights, fractions_ages, fractions_errors
     fractions_F <- C14toF14C(fractions_ages, fractions_errors)
     tot_F <- sum(totC * fractions_F[,1])
-    tot_F_er <- sum(sqrt(fractions_F[,2]^2))
+    tot_F_er <- sqrt(sum(fractions_F[,2]^2))
     FasC <- FtoC(tot_F, tot_F_er)
 
     if(talk)
@@ -120,7 +120,7 @@ plot_contamination <- function(true.F, true.er, obs.F, obs.er, perc, perc.er, co
 #' @name contaminate
 #' @title Simulate the impact of contamination on a radiocarbon age
 #' @description Given a true/target radiocarbon age, calculate the impact of contamination (for example, 1\% contamination with modern carbon) on the observed age. Can optionally include contamination uncertainties, but then Monte Carlo iterations should be used (option MC=TRUE).
-#' @details Whereas the function takes C14 ages and percentage contamination as input, internal calculations are done in the F14C realm and using fractions (between 0 and 1). The central calculation is `F_obs = ((1-frac)*F_true) + (frac*F_contam)`, where `F_obs` is the observed C14 age as F14C, `frac` is the fraction of contamination, `F_true` is the F14C of the true/target C14 age, and `F_contam` is the F activity of the contamination. In some extreme cases, the calculations will spit out unexpected results. Messages will be provided in most of these cases.
+#' @details Whereas the function takes C14 ages and percentage contamination as input, internal calculations are done in the F14C timescale and using fractions (between 0 and 1). The central calculation is `F_obs = ((1-frac)*F_true) + (frac*F_contam)`, where `F_obs` is the observed C14 age as F14C, `frac` is the fraction of contamination, `F_true` is the F14C of the true/target C14 age, and `F_contam` is the F activity of the contamination. In some extreme cases, the calculations will spit out unexpected results. Messages will be provided in most of these cases.
 #' @return The observed radiocarbon age and error
 #' @param y The 'true' radiocarbon age
 #' @param er The error of the 'true' radiocarbon age
@@ -252,7 +252,7 @@ contaminate <- function(y, er=0, percentage, percentage.error=0.001, F.contam=1,
 #' @name clean
 #' @title Simulate removing contamination from a radiocarbon age
 #' @description Given an observed radiocarbon age, remove the impact of contamination (for example, 1\% contamination with modern carbon) to estimate the true/target age
-#' @details Whereas the function takes C14 ages and percentage contamination as input, internal calculations are done in the F14C realm and using fractions (between 0 and 1). The central calculation is `F_true = ((1-frac)*F_obs) - (frac*F_contam)`, where `F_true` is the true or target age in F14C, `frac` is the fraction of contamination, `F_obs` is the F14C of the observed C14 age, and `F_contam` is the F activity of the contamination. In some extreme cases, the calculations will spit out unexpected results. Messages will be provided in most of these cases.
+#' @details Whereas the function takes C14 ages and percentage contamination as input, internal calculations are done in the F14C timescale and using fractions (between 0 and 1). The central calculation is `F_true = ((1-frac)*F_obs) - (frac*F_contam)`, where `F_true` is the true or target age in F14C, `frac` is the fraction of contamination, `F_obs` is the F14C of the observed C14 age, and `F_contam` is the F activity of the contamination. In some extreme cases, the calculations will spit out unexpected results. Messages will be provided in most of these cases.
 #' @return The true/target radiocarbon age and error
 #' @param y The observed radiocarbon age
 #' @param er The error of the observed radiocarbon age
@@ -381,7 +381,7 @@ clean <- function(y, er=0, percentage, percentage.error=0.001, F.contam=1, F.con
 #' @name muck
 #' @title Calculate the amount of muck/contamination to explain an observed C14 age
 #' @description Given an observed, a target radiocarbon age and the F14C or amount of contamination, calculate the amount of contamination (or its F14C) required to explain the observed age.
-#' @details Whereas the function takes true/target and observed C14 ages as input and percentage contamination as output, internal calculations are done in the F14C realm and using contamination fractions (between 0 and 1). The central calculation is `frac = (F_obs - F_true) / (F_contam - F_true)`, where `frac` is the fraction of contamination to explain how we went from the observed to the true C14 age, `F_obs` is the observed C14 age in F14C, `F_true` is the true or target age in F14C, `F_contam` is the F value of the contamination. In some extreme cases (e.g., if dividing by zero), the calculation will spit out unexpected results. Messages will be provided in most of these cases.
+#' @details Whereas the function takes true/target and observed C14 ages as input and percentage contamination as output, internal calculations are done in the F14C timescale and using contamination fractions (between 0 and 1). The central calculation is `frac = (F_obs - F_true) / (F_contam - F_true)`, where `frac` is the fraction of contamination to explain how we went from the observed to the true C14 age, `F_obs` is the observed C14 age in F14C, `F_true` is the true or target age in F14C, `F_contam` is the F value of the contamination. In some extreme cases (e.g., if dividing by zero), the calculation will spit out unexpected results. Messages will be provided in most of these cases.
 #' @return The required contamination (as percentage) or the F14C of the contamination, as well as a plot
 #' @param y.obs The observed radiocarbon age
 #' @param y.obs.er The error of the observed radiocarbon age
@@ -460,7 +460,7 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
     if(is.na(perc.contam)) {
       if(all(F.contam.er == 0)) # then waste no time sampling
          F.contam.samples <- F.contam[1] else
-            F.contam.samples <- rnorm(its, F.contam, F.contam.er)
+            F.contam.samples <- rnorm(its, as.numeric(F.contam), as.numeric(F.contam.er))
     } else 
         if(perc.contam.er == 0) # then waste no time sampling
           frac.contam.samples <- perc.contam[1]/100 else
@@ -587,7 +587,8 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
 #' @param er The error of the radiocarbon age.
 #' @param mean The mean of the normal or gamma distribution.
 #' @param sdev The standard deviation of the normal distribution.
-#' @param add The distribution can be added or subtracted. Adding results in ages being pushed to younger age distributions, and subtracting to older ones.
+#' @param add The distribution can be added or subtracted. Adding results in ages being pushed to older age distributions, and subtracting to younger ones.
+#' @param subtract The distribution can be added or subtracted. Adding results in ages being pushed to older age distributions, and subtracting to younger ones. Defaults to \code{subtract=FALSE}. If set to TRUE, overrides 'add'.
 #' @param seed For reproducibility, a seed can be set (e.g., \code{seed=123}). Defaults to NA, no seed set.
 #' @param n The amount of random values to sample (from both the calibrated distribution and the gamma/normal distribution) to calculate the push. Defaults to \code{n=1e6}.
 #' @param prob The probability for the hpd ranges. Defaults to \code{prob=0.95}.
@@ -613,7 +614,7 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
 #' @examples
 #'   push.normal(250, 25, 50, 10)
 #' @export
-push.normal <- function(y, er, mean, sdev, add=TRUE, seed=NA, n=1e6, prob=0.95, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, cc.dir=NULL, normal=TRUE, t.a=3, t.b=4, BCAD=FALSE, cal.lim=c(), calib.col=rgb(0,0,0,.25), pushed.col=rgb(0,0,1,.4), heights=.3, inset=TRUE, inset.col="darkgreen", inset.loc=c(0.6, 0.97, 0.6, 0.97), inset.mar=c(3, 0.5, 0.5, 0.5), inset.mgp=c(2,1,0)) {
+push.normal <- function(y, er, mean, sdev, add=TRUE, subtract=FALSE, seed=NA, n=1e6, prob=0.95, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, cc.dir=NULL, normal=TRUE, t.a=3, t.b=4, BCAD=FALSE, cal.lim=c(), calib.col=rgb(0,0,0,.25), pushed.col=rgb(0,0,1,.4), heights=.3, inset=TRUE, inset.col="darkgreen", inset.loc=c(0.6, 0.97, 0.6, 0.97), inset.mar=c(3, 0.5, 0.5, 0.5), inset.mgp=c(2,1,0)) {
   if(length(y) != 1 || length(er) != 1)
     stop("Please provide one value for both y and er")
   if(length(mean) != 1 || length(sdev) != 1)
@@ -621,6 +622,9 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, seed=NA, n=1e6, prob=0.95, 
 
   y <- y - deltaR
   er <- sqrt(er^2 + deltaSTD^2)
+  
+  if(isTRUE(subtract))
+    add <- FALSE  
   
   if(!is.na(seed))
     if(is.numeric(seed))
@@ -631,10 +635,10 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, seed=NA, n=1e6, prob=0.95, 
   calib <- caldist(y, er, cc=cc, postbomb=postbomb, thiscurve=thiscurve, normalise=TRUE, BCAD=BCAD, cc.dir=cc.dir)
   rcalib <- r.calib(n, y, er, cc=cc, postbomb=postbomb, thiscurve=thiscurve, normal=normal, t.a=t.a, t.b=t.b, normalise=TRUE, BCAD=BCAD, rule=2, cc.dir=cc.dir)
 
-  if(add) { # the date becomes younger
-    shifted <- if(BCAD) rcalib + shift else rcalib - shift
-   } else { # the date becomes older
-       shifted <- if(BCAD) rcalib - shift else rcalib + shift
+  if(isTRUE(add)) { # the date becomes older
+    shifted <- if(BCAD) rcalib - shift else rcalib + shift
+   } else { # the date becomes younger
+       shifted <- if(BCAD) rcalib + shift else rcalib - shift
    }
   shifted <- density(shifted)
    
@@ -651,7 +655,8 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, seed=NA, n=1e6, prob=0.95, 
   if(inset) {
     op <- par(fig=inset.loc, new=TRUE, mar=inset.mar, mgp=inset.mgp, bty="n")
     xseq <- seq(mean-(3*sdev), mean+(3*sdev), length=200)
-    if(add) xlim <- range(xseq) else xlim <- rev(range(xseq))
+    if(isTRUE(add)) xlim <- rev(range(xseq)) else xlim <- range(xseq)
+
     plot(xseq, dnorm(xseq, mean, sdev), type="l", xlim=xlim, col=inset.col, xlab="", ylab="", yaxt="n", yaxs="r")
     end <- mean+sdev
     arrows(mean, 0, end, 0, col=inset.col, lwd=2, length=.05)
@@ -672,7 +677,8 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, seed=NA, n=1e6, prob=0.95, 
 #' @param er The error of the radiocarbon age
 #' @param mean The mean of the gamma distribution
 #' @param shape The shape of the gamma distribution. If setting this to shape=1, it becomes an exponential distribution.
-#' @param add The distribution can be added or subtracted. Adding results in ages being pushed to younger age distributions, and subtracting to older ones.
+#' @param add The distribution can be added or subtracted. Adding results in ages being pushed to older age distributions, and subtracting to younger ones.
+#' @param subtract The distribution can be added or subtracted. Adding results in ages being pushed to older age distributions, and subtracting to younger ones. Defaults to \code{subtract=FALSE}. If set to TRUE, overrides 'add'.
 #' @param seed For reproducibility, a seed can be set (e.g., \code{seed=123}). Defaults to NA, no seed set.
 #' @param n The amount of random values to sample (from both the calibrated distribution and the gamma distribution) to calculate the push. Defaults to \code{n=1e6}.
 #' @param prob The probability for the hpd ranges. Defaults to \code{prob=0.95}.
@@ -682,7 +688,7 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, seed=NA, n=1e6, prob=0.95, 
 #' @param deltaSTD Uncertainty of the age offset (1 standard deviation).
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
-#' @param is.F Use this if the provided date is in the F14C realm.
+#' @param is.F Use this if the provided date is in the F14C timescale.
 #' @param normal Use the normal distribution to calibrate dates (default TRUE). The alternative is to use the t model (Christen and Perez 2016).
 #' @param t.a Value a of the t distribution (defaults to 3).
 #' @param t.b Value b of the t distribution (defaults to 4).
@@ -699,7 +705,7 @@ push.normal <- function(y, er, mean, sdev, add=TRUE, seed=NA, n=1e6, prob=0.95, 
 #' @examples
 #'   push.gamma(250, 25, 50, 2, add=FALSE) # subtract a gamma distribution
 #' @export
-push.gamma <- function(y, er, mean, shape, add=TRUE, seed=NA, n=1e6, prob=0.95, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, cc.dir=NULL, is.F=FALSE, normal=TRUE, t.a=3, t.b=4, BCAD=FALSE, cal.lim=c(), calib.col=rgb(0,0,0,.25), pushed.col=rgb(0,0,1,.4), heights=0.3, inset=TRUE, inset.col="darkgreen", inset.loc=c(0.6, 0.97, 0.6, 0.97), inset.mar=c(3, 0.5, 0.5, 0.5), inset.mgp=c(2,1,0)) {
+push.gamma <- function(y, er, mean, shape, add=TRUE, subtract=FALSE, seed=NA, n=1e6, prob=0.95, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, cc.dir=NULL, is.F=FALSE, normal=TRUE, t.a=3, t.b=4, BCAD=FALSE, cal.lim=c(), calib.col=rgb(0,0,0,.25), pushed.col=rgb(0,0,1,.4), heights=0.3, inset=TRUE, inset.col="darkgreen", inset.loc=c(0.6, 0.97, 0.6, 0.97), inset.mar=c(3, 0.5, 0.5, 0.5), inset.mgp=c(2,1,0)) {
   if(length(y) != 1 || length(er) != 1)
     stop("Please provide one value for both y and er")
   if(length(mean) != 1 || length(shape) != 1)
@@ -707,6 +713,9 @@ push.gamma <- function(y, er, mean, shape, add=TRUE, seed=NA, n=1e6, prob=0.95, 
 
   y <- y - deltaR
   er <- sqrt(er^2 + deltaSTD^2)
+  
+  if(isTRUE(subtract))
+    add <- FALSE
   
   if(!is.na(seed))
     if(is.numeric(seed))
@@ -717,10 +726,10 @@ push.gamma <- function(y, er, mean, shape, add=TRUE, seed=NA, n=1e6, prob=0.95, 
   calib <- caldist(y, er, cc=cc, postbomb=postbomb, thiscurve=thiscurve, normalise=TRUE, BCAD=BCAD, cc.dir=cc.dir, is.F=is.F)
   rcalib <- r.calib(n, y, er, cc=cc, postbomb=postbomb, thiscurve=thiscurve, normal=normal, t.a=t.a, t.b=t.b, normalise=TRUE, BCAD=BCAD, rule=2, cc.dir=cc.dir, is.F=is.F)
 
-  if(add) { # the date becomes younger
-    shifted <- if(BCAD) rcalib + shift else rcalib - shift
-   } else { # the date becomes older
-       shifted <- if(BCAD) rcalib - shift else rcalib + shift
+  if(isTRUE(add)) { # the date becomes older
+    shifted <- if(BCAD) rcalib - shift else rcalib + shift
+   } else { # the date becomes younger
+       shifted <- if(BCAD) rcalib + shift else rcalib - shift
    }
   shifted <- density(shifted)
    
@@ -740,7 +749,8 @@ push.gamma <- function(y, er, mean, shape, add=TRUE, seed=NA, n=1e6, prob=0.95, 
   if(inset) {
     op <- par(fig=inset.loc, new=TRUE, mar=inset.mar, mgp=inset.mgp, bty="n")
     xseq <- seq(0, mean*(1+4/sqrt(shape)), length=200)
-    if(add) xlim <- range(xseq) else xlim <- rev(range(xseq))
+    if(isTRUE(add)) xlim <- rev(range(xseq)) else xlim <- range(xseq)
+
     plot(xseq, dgamma(xseq, shape, shape/mean), type="l", xlim=xlim, col=inset.col, xlab="", ylab="", yaxt="n", yaxs="r")
     end <- mean+(mean/3)
     arrows(mean, 0, end, 0, col=inset.col, lwd=2, length=.05)

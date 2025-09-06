@@ -46,9 +46,9 @@ as.one(
 
 \item{deltaSTD}{Uncertainty of the age offset (1 standard deviation).}
 
-\item{is.F}{Set this to TRUE if the provided age and error are in the F14C realm.}
+\item{is.F}{Set this to TRUE if the provided age and error are in the F14C timescale.}
 
-\item{as.F}{Whether or not to calculate ages in the F14C realm. Defaults to \code{as.F=FALSE}, which uses the C14 realm.}
+\item{as.F}{Whether or not to calculate ages in the F14C timescale. Defaults to \code{as.F=FALSE}, which uses the C14 timescale.}
 
 \item{thiscurve}{As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).}
 
@@ -68,7 +68,7 @@ as.one(
 
 \item{age.lim}{Limits of the age axis. Calculated automatically by default.}
 
-\item{age.lab}{Label of the age axis. Defaults to cal BP or BC/AD.}
+\item{age.lab}{Label of the age axis. Defaults to cal BP or cal BC/AD.}
 
 \item{d.lim}{Limits of the depth/vertical axis. Calculated automatically by default.}
 
@@ -90,7 +90,7 @@ as.one(
 The product of all calibrated probabilities over the range of cal BP years.
 }
 \description{
-Combine all calibrated dates by calculating their product for a range of calendar ages, as if all dates belonged to the same (unknown) single calendar age. This assumed that they all belong to the same single year in time. Use with great care, as often dates could stem from material that could have accumulated over a (much) longer time-span, and if so, then the result will be wrong. See Baillie (1991)'s 'suck-in' effect, Journal of Theoretical Archaeology 2, 12-16.
+Combine all calibrated dates by calculating their product for a range of calendar ages, as if all dates belonged to the same (unknown) single calendar age. This assumes that they all belong to the same single year in time. Use with great care, as often dates could stem from material that could have accumulated over a (much) longer time-span, and if so, then the result will be wrong. See Baillie (1991)'s 'suck-in' effect, Journal of Theoretical Archaeology 2, 12-16.
 }
 \details{
 This calculates the product of all calibrated probabilities, over the range of calendar ages to which the radiocarbon ages calibrate.

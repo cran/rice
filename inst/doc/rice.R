@@ -45,7 +45,7 @@ draw.ccurve(1600, 2020, BCAD=TRUE, cc2='nh1')
 draw.ccurve(1600, 2020, BCAD=TRUE, cc2='nh1', add.yaxis=TRUE)
 
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
-draw.ccurve(50000, 35000, realm="D")
+draw.ccurve(50000, 35000, timescale="D")
 
 ## -----------------------------------------------------------------------------
 calBPtoC14(10.5)
@@ -57,12 +57,12 @@ BCADtocalBP(-1, zero=TRUE)
 BCADtocalBP(-1, zero=FALSE)
 
 ## -----------------------------------------------------------------------------
-D14CtoF14C(152, t=4000)
-F14CtoD14C(0.71, t=4000)
+Delta14CtoF14C(152, t=4000)
+F14CtoDelta14C(0.71, t=4000)
 
 ## -----------------------------------------------------------------------------
-C14toD14C(152, t=4000)
-D14CtoC14(592, t=4000)
+C14toDelta14C(152, t=4000)
+Delta14CtoC14(592, t=4000)
 
 ## ----fig.width=5, fig.asp=1---------------------------------------------------
 draw.CF(50000, 3000) 
@@ -73,7 +73,7 @@ fromto(100, "calBP")
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
 x <- seq(0, 55e3, length=1e3)
 cc <- calBPtoC14(x)
-Dcc <- C14toD14C(cc[,1], cc[,2], x)
+Dcc <- C14toDelta14C(cc[,1], cc[,2], x)
 
 par(mar=c(4,3,1,3), bty="l")
 plot(x/1e3, Dcc[,1]+Dcc[,2], type="l", xlab="kcal BP", ylab="")
@@ -81,7 +81,7 @@ mtext(expression(paste(Delta, ""^{14}, "C")), 2, 1.7)
 lines(x/1e3, Dcc[,1]-Dcc[,2])
 
 ## ----fig.width=6, fig.asp=.8--------------------------------------------------
-draw.ccurve(cc2="IntCal20", realm2="D", add.yaxis=TRUE)
+draw.ccurve(cc2="IntCal20", timescale2="D", add.yaxis=TRUE)
 
 ## -----------------------------------------------------------------------------
 data(shroud)
