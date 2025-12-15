@@ -11,11 +11,11 @@ C14tocalBP(
   rule = 2,
   cc.dir = NULL,
   thiscurve = NULL,
-  roundby = NA
+  roundby = Inf
 )
 }
 \arguments{
-\item{y}{The C14 age. No errors are assumed.}
+\item{y}{The C14 age. No errors are assumed. Can only deal with one C14 age at a time.}
 
 \item{cc}{calibration curve for C14 (see \code{caldist()}).}
 
@@ -27,7 +27,7 @@ C14tocalBP(
 
 \item{thiscurve}{As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).}
 
-\item{roundby}{Amount of decimals required for the output. Defaults to \code{roundby=NA}, no rounding.}
+\item{roundby}{Amount of decimals required for the output. Defaults to \code{roundby=Inf}, no rounding.}
 }
 \value{
 The cal BP age(s) belonging to the entered C14 age

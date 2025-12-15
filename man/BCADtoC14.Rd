@@ -8,11 +8,11 @@ BCADtoC14(
   x,
   cc = 1,
   postbomb = FALSE,
-  zero = TRUE,
+  zero = FALSE,
   rule = 1,
   cc.dir = NULL,
   thiscurve = NULL,
-  roundby = NA
+  roundby = Inf
 )
 }
 \arguments{
@@ -22,7 +22,7 @@ BCADtoC14(
 
 \item{postbomb}{Whether or not to use a postbomb curve (see \code{caldist()}).}
 
-\item{zero}{Whether or not zero BC/AD should be included. Defaults to \code{zero=TRUE}.}
+\item{zero}{Whether or not zero BC/AD should be included. Defaults to \code{zero=FALSE}.}
 
 \item{rule}{How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.}
 
@@ -30,7 +30,7 @@ BCADtoC14(
 
 \item{thiscurve}{As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).}
 
-\item{roundby}{Amount of decimals required for the output. Defaults to \code{roundby=NA}, no rounding.}
+\item{roundby}{Amount of decimals required for the output. Defaults to \code{roundby=Inf}, no rounding.}
 }
 \value{
 The calibration-curve 14C year belonging to the entered BC/AD age

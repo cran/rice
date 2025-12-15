@@ -9,10 +9,10 @@ C14toBCAD(
   cc = 1,
   postbomb = FALSE,
   rule = 1,
-  zero = TRUE,
+  zero = FALSE,
   cc.dir = NULL,
   thiscurve = NULL,
-  roundby = NA
+  roundby = Inf
 )
 }
 \arguments{
@@ -24,13 +24,13 @@ C14toBCAD(
 
 \item{rule}{How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.}
 
-\item{zero}{Whether or not to include 0 in BC/AD years. Defaults to TRUE.}
+\item{zero}{Whether or not zero BC/AD should be included. Defaults to \code{zero=FALSE}.}
 
 \item{cc.dir}{Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.}
 
 \item{thiscurve}{As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).}
 
-\item{roundby}{Amount of decimals required for the output. Defaults to \code{roundby=NA}, no rounding.}
+\item{roundby}{Amount of decimals required for the output. Defaults to \code{roundby=Inf}, no rounding.}
 }
 \value{
 The cal BCAD age(s) belonging to the entered C14 age
@@ -43,7 +43,7 @@ Find the BCAD ages where the calibration curve crosses a given C14 age. This fun
 }
 \examples{
   y <- 130
-  calibrate(y,10, BCAD=TRUE)
+  calibrate(y, 10, BCAD=TRUE)
   abline(h=y)
   abline(v=C14toBCAD(y))
 }

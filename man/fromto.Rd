@@ -11,12 +11,13 @@ fromto(
   postbomb = 1,
   cc.dir = NULL,
   thiscurve = NULL,
-  zero = TRUE,
+  zero = FALSE,
   width = c(),
   digits = 0,
   C14.col = rgb(0, 0, 1, 0.5),
   Delta14C.col = rgb(0, 0.4, 0, 0.4),
   ka = FALSE,
+  cal.rev = TRUE,
   legend.size = 0.7
 )
 }
@@ -33,7 +34,7 @@ fromto(
 
 \item{thiscurve}{As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).}
 
-\item{zero}{Whether or not zero BC/AD should be included. Defaults to 0.}
+\item{zero}{Whether or not zero BC/AD should be included. Defaults to none, FALSE.}
 
 \item{width}{Width of the righthand plot. Calculated automatically by default (older ages get wider windows).}
 
@@ -44,6 +45,8 @@ fromto(
 \item{Delta14C.col}{Colour of the Delta14C curve. Defaults to semi-transparent green, \code{Delta14C.col=rgb(0,.4,0,.4)}.}
 
 \item{ka}{Whether to use years or ka (thousands of years). Defaults to \code{ka=FALSE}.}
+
+\item{cal.rev}{Reverse the age axis (right panel). Defaults to TRUE.}
 
 \item{legend.size}{Size of the font of the legend. Defaults to 0.7 of R's standard size.}
 }

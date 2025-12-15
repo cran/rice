@@ -8,10 +8,10 @@
 library(rice)
 
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
-howmanyC14(0)
-howmanyC14(55e3)
+howmuchC14(0)
+howmuchC14(55e3)
 x <- seq(0, 55e3, length=100) # a sequence of ages
-y <- sapply(x, function(x) howmanyC14(x, talk=FALSE))
+y <- sapply(x, function(x) howmuchC14(x, talk=FALSE))
 plot(x, y, type="l", xlab="time (cal BP)", ylab="C-14 remaining")
 
 ## -----------------------------------------------------------------------------
@@ -35,7 +35,7 @@ C14toBCAD(129) # the curve crosses 129 14C BP 5 times
 
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
 draw.ccurve(1600, 1950, BCAD=TRUE)
-abline(h=BCADtoC14(1694)[1], lty=3) 
+abline(h=BCADtoC14(1694), lty=3)
 abline(v=C14toBCAD(129), lty=3)
 
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
@@ -46,6 +46,9 @@ draw.ccurve(1600, 2020, BCAD=TRUE, cc2='nh1', add.yaxis=TRUE)
 
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
 draw.ccurve(50000, 35000, timescale="D")
+
+## ----fig.width=4, fig.asp=.8--------------------------------------------------
+draw.ccurve(cc1="stuiver_suess_1966", cc2="pearson_stuiver_1986")
 
 ## -----------------------------------------------------------------------------
 calBPtoC14(10.5)
@@ -85,7 +88,9 @@ draw.ccurve(cc2="IntCal20", timescale2="D", add.yaxis=TRUE)
 
 ## -----------------------------------------------------------------------------
 data(shroud)
-shroud
+calibrate.table(shroud$y, shroud$er, shroud$ID)
+
+## -----------------------------------------------------------------------------
 pool(shroud$y,shroud$er) 
 Zu <- grep("ETH", shroud$ID) # Zurich lab only
 pool(shroud$y[Zu],shroud$er[Zu])
@@ -225,5 +230,5 @@ par(bg="black", mar=rep(1, 4))
 n <- 50; set.seed(1)
 draw.dates(rnorm(n, 2450, 30), rep(25, n), 1:n,
   mirror=FALSE, draw.base=FALSE, draw.hpd=FALSE, col="white",
-  threshold=1e-28, age.lim=c(2250, 2800), up=TRUE, ex=-20)
+  threshold=1e-28, age.lim=c(2250, 2800), up=TRUE, peak=30)
 

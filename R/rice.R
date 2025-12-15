@@ -8,9 +8,9 @@
 
 # error multipliers, rounding. Could add procedures for different labs, e.g. QUB_bg, etc. This would be useful for reasons of transparency and community standards. Add data from historical UBA standards/backgrounds?
 
-#' @name howmanyC14
+#' @name howmuchC14
 #' @title Amount of C14 particles in a sample
-#' @description Find the amount of remaining C14 atoms in a sample, given its weight and age.
+#' @description Calculate the expected amount of remaining C14 atoms in a sample, given its weight and age.
 #' @details The number of carbon atoms in the sample is estimated. Given the known C14/C ratio at F=1, and given the sample's age, we can estimate the number of remaining C14 atoms.
 #' @return The estimated number of C14 atoms.
 #' @param age The age of the sample (in cal BP per default, or in C14 BP is use.cc=FALSE).
@@ -27,11 +27,11 @@
 #' @param decimals Number of decimals to be returned for F and atom counts.
 #' @author Maarten Blaauw
 #' @examples
-#'   howmanyC14(0) # recent sample
-#'   howmanyC14(55e3) # at dating limit
-#'   howmanyC14(145e3) # way beyond the dating limit, 1 C14 atom per mg remains
+#'   howmuchC14(0) # recent sample
+#'   howmuchC14(55e3) # at dating limit
+#'   howmuchC14(145e3) # way beyond the dating limit, 1 C14 atom per mg remains
 #' @export
-howmanyC14 <- function(age, wght=1, use.cc=TRUE, Av=6.02214076e23, C14.ratio=1.176e-12, format="g", cc=1, postbomb=FALSE, cc.dir=NULL, thiscurve=NULL, talk=TRUE, decimals=3) {
+howmuchC14 <- function(age, wght=1, use.cc=TRUE, Av=6.02214076e23, C14.ratio=1.176e-12, format="g", cc=1, postbomb=FALSE, cc.dir=NULL, thiscurve=NULL, talk=TRUE, decimals=3) {
 
   if(use.cc) {
     F <- calBPtoF14C(age, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[,1]

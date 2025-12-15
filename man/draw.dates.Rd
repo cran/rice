@@ -17,6 +17,9 @@ draw.dates(
   timescale = "C",
   reservoir = c(),
   normal = TRUE,
+  peak = 1,
+  ex = c(),
+  as.unit = FALSE,
   t.a = 3,
   t.b = 4,
   prob = 0.95,
@@ -38,7 +41,6 @@ draw.dates(
   add = FALSE,
   ka = FALSE,
   rotate.axes = FALSE,
-  ex = 0.8,
   normalise = TRUE,
   cc.col = rgb(0, 0.5, 0, 0.5),
   cc.border = rgb(0, 0.5, 0, 0.5),
@@ -46,6 +48,7 @@ draw.dates(
   age.lab = c(),
   age.lim = c(),
   age.rev = FALSE,
+  cal.rev = FALSE,
   d.lab = c(),
   d.lim = c(),
   d.rev = TRUE,
@@ -86,6 +89,12 @@ draw.dates(
 \item{reservoir}{Reservoir age, or reservoir age and age offset.}
 
 \item{normal}{Use the normal distribution to calibrate dates (default TRUE). The alternative is to use the t model (Christen and Perez 2009).}
+
+\item{peak}{Height multiplier for the distributions. Defaults to \code{peak=1}.}
+
+\item{ex}{synonym for peak}
+
+\item{as.unit}{If set to TRUE, the peak of the highest distribution is set to 1. Otherwise, it is set to a fraction of the axis limits (default, see 'fraction')}
 
 \item{t.a}{Value a of the t distribution (defaults to 3).}
 
@@ -129,8 +138,6 @@ draw.dates(
 
 \item{rotate.axes}{By default, the calendar age axis is plotted on the horizontal axis, and depth/position on the vertical one. Use \code{rotate.axes=TRUE} to rotate the axes.}
 
-\item{ex}{Exaggeration of the height of the distribution, defaults to \code{ex=1}.}
-
 \item{normalise}{If TRUE, the age distributions are normalised by plotting each distribution with the same total area. Precise dates will therefore peak higher than less precise dates (default). If \code{normalise=FALSE}, the peak of each date will be drawn at the same height.}
 
 \item{cc.col}{Colour of the calibration curve. Default semi-transparent darkgreen.}
@@ -144,6 +151,8 @@ draw.dates(
 \item{age.lim}{Limits of the calendar axis (if present)}
 
 \item{age.rev}{Reverse the age axis. Defaults to TRUE}
+
+\item{cal.rev}{Synonym for age.rev}
 
 \item{d.lab}{Title of the vertical axis (if present)}
 

@@ -6,19 +6,19 @@
 \usage{
 BCADtoDelta14C(
   x,
-  zero = TRUE,
+  zero = FALSE,
   cc = 1,
   postbomb = FALSE,
   rule = 1,
   cc.dir = NULL,
   thiscurve = NULL,
-  roundby = NA
+  roundby = Inf
 )
 }
 \arguments{
 \item{x}{The cal BC/AD year.}
 
-\item{zero}{Whether or not zero BC/AD should be included. Defaults to \code{zero=TRUE}.}
+\item{zero}{Whether or not zero BC/AD should be included. Defaults to \code{zero=FALSE}.}
 
 \item{cc}{calibration curve (see \code{caldist()}).}
 
@@ -30,7 +30,7 @@ BCADtoDelta14C(
 
 \item{thiscurve}{As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).}
 
-\item{roundby}{Amount of decimals required for the output. Defaults to \code{roundby=NA}, no rounding.}
+\item{roundby}{Amount of decimals required for the output. Defaults to \code{roundby=Inf}, no rounding.}
 }
 \value{
 The calibration-curve 14C year belonging to the entered cal BC/AD age.
