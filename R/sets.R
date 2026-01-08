@@ -209,7 +209,7 @@ as.bin <- function(y, er, width=100, move.by=c(), move.res=100, cc=1, postbomb=F
 #' @param prob The probability of the highest posterior densities. Defaults to 95\%.
 #' @examples
 #'   distA <- caldist(130, 20, cc=0) # normal distribution
-#'   distB <- caldist(130, 20, cc=1) # calibrated distribution
+#'   distB <- caldist(130, 20, cc=1, bombalert=FALSE) # calibrated distribution
 #'   plot(distB, type="l")
 #'   lines(distA, col=2)
 #'   hpd.overlap(distA, distB)
@@ -267,7 +267,7 @@ hpd.overlap <- function(distA, distB, prob=.95) {
 #'   y <- c(3820, 4430) # the C14 ages of a twig and a marine shell from a single layer
 #'   er <- c(40, 40) # their lab errors
 #'   overlap(y, er, cc=1:2, dist.col=3:4, labels=c("twig", "shell"))
-#'   mydists <- list(caldist(130,20, cc=1), caldist(150,20, cc=0))
+#'   mydists <- list(caldist(130,20, cc=1, bombalert=FALSE), caldist(150, 20, cc=0))
 #'   overlap(mydists)
 #' @export
 overlap <- function(y, er=c(), labels=c(), is.F=FALSE, res=1e3, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, thiscurve=NULL, BCAD=FALSE, normal=TRUE, t.a=3, t.b=4, cc.dir=NULL, threshold=0, xlim=c(), cal.rev=TRUE, xlab=c(), yrby=1, dist.col=rgb(0,0,0,.2), overlap.col=rgb(0,0,1,.4), overlap.border=NA, overlap.height=1, talk=TRUE, visualise=TRUE, prob=0.95, roundby=1, bty="n", yaxt="n") {
@@ -419,7 +419,7 @@ spread <- function(y, er, n=1e5, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, as.
 #' @param y2 The second radiocarbon date.
 #' @param er2 The lab error of the second radiocarbon date.
 #' @param n The number of iterations to base the calculations on. Defaults to 100,000. Different values for n could significantly alter performance and accuracy.
-#' @param positive Whether or not to enforce the span to be positive. If set to TRUE, then negative span values are removed. Defaults to FALSE.
+#' @param positive Whether or not to enforce the span to be positive. If set to TRUE, then negative span values are removed. Defaults to TRUE.
 #' @param cc Calibration curve(s) to use. Defaults to IntCal20 (\code{cc=1}). Can be a vector of length 2.
 #' @param postbomb Whether or not to use a postbomb curve. Required for negative radiocarbon ages.
 #' @param deltaR Age offset (e.g. for marine samples). Can be a vector of length 2.
@@ -441,7 +441,7 @@ spread <- function(y, er, n=1e5, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, as.
 #' @examples
 #'   span(2300, 20, 2350, 20)
 #' @export
-span <- function(y1, er1, y2, er2, n=1e5, positive=FALSE, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, as.F=FALSE, thiscurve=NULL, yrsteps=1, cc.resample=FALSE, threshold=1e-3, normal=TRUE, t.a=3, t.b=4, cc.dir=NULL, visualise=TRUE, talk=TRUE, prob=0.95, roundby=1, bty="l") {
+span <- function(y1, er1, y2, er2, n=1e5, positive=TRUE, cc=1, postbomb=FALSE, deltaR=0, deltaSTD=0, as.F=FALSE, thiscurve=NULL, yrsteps=1, cc.resample=FALSE, threshold=1e-3, normal=TRUE, t.a=3, t.b=4, cc.dir=NULL, visualise=TRUE, talk=TRUE, prob=0.95, roundby=1, bty="l") {
 
   if(!length(y1) == 1)
     stop("y1 must be of length 1")

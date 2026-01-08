@@ -88,7 +88,7 @@ draw.ccurve(cc2="IntCal20", timescale2="D", add.yaxis=TRUE)
 
 ## -----------------------------------------------------------------------------
 data(shroud)
-calibrate.table(shroud$y, shroud$er, shroud$ID)
+shroud
 
 ## -----------------------------------------------------------------------------
 pool(shroud$y,shroud$er) 
@@ -116,8 +116,12 @@ er <- c(40, sqrt(40^2 + 25^2))
 cc <- c(1,2)
 overlap(y, er, cc=cc)
 
+## ----fig.width=4, fig.asp=1---------------------------------------------------
+data(shroud)
+calibratable(shroud$y, shroud$er, shroud$ID)
+
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
-contaminate(5000, 20, 10, 0, 1)
+contaminate(5000, 20, 10, F.contam=1)
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
 contaminate(66e6, 1e6, 0.5, 0.1, 1)
@@ -130,7 +134,7 @@ muck(591, 30, BCADtoC14(40)[,1], 0, 1)
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
 perFaith <- BCADtoC14(40)
-repairF <- BCADtoF14C(1400)
+repairF <- BCADtoF14C(1532)
 muck(591, 30, perFaith[,1], perFaith[,2], repairF[,1], repairF[,2])
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
