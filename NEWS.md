@@ -1,3 +1,11 @@
+# rice 1.6.2
+* updated the test-rice R file to reflect the correct find.shells results.
+
+# rice 1.6.1
+* changes to mentions of `rnaturalearthhires` for high-resolution maps, as per CRAN request.
+* caldist now calculates values better when `student.t=TRUE`. 
+* the `shells` dataset now has correct feeding ecology labels.
+
 # rice 1.6.0
 * updated the download from the calib.org marine database (which was last updated 8 November 2025).
 * Changed the `positive` option's default within the `span` function to TRUE.

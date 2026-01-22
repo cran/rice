@@ -203,15 +203,25 @@ p.range(300, 150, 130, 10)
 ## ----fig.width=5, fig.asp=1---------------------------------------------------
 push.normal(2450,40, 400,20)
 
-## ----fig.width=5, fig.asp=1---------------------------------------------------
-myshells <- map.shells(S=54, W=-8, N=61, E=0) # the northern part of the UK
+## ----eval=FALSE---------------------------------------------------------------
+# myshells <- map.shells(S=54, W=-8, N=61, E=0) # the northern part of the UK
+
+## ----fig.width=5, fig.asp=1, echo=FALSE---------------------------------------
+if(requireNamespace("sf", quietly = TRUE) &&
+  requireNamespace("rnaturalearth", quietly = TRUE) &&
+  requireNamespace("rnaturalearthdata", quietly = TRUE)) {
+    myshells <- map.shells(S = 54, W = -8, N = 61, E = 0, mapsize = "medium")
+  } else {
+      message("Mapping dependencies not available; skipping map in vignette.")
+      myshells <- NULL
+	}
 
 ## ----fig.width=5, fig.asp=1---------------------------------------------------
 head(myshells)
 shells.mean(myshells)
 
 ## ----fig.width=5, fig.asp=1---------------------------------------------------
-myshells <- find.shells(120, 10, 20)
+myshells <- find.shells(20, -30, 20)
 shells.mean(myshells, distance=TRUE)
 
 ## ----fig.width=5, fig.asp=1, eval=FALSE---------------------------------------

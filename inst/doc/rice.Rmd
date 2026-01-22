@@ -417,11 +417,23 @@ push.normal(2450,40, 400,20)
 
 Dates on marine material will often have to be calibrated with the Marine20 calibration curve[^7], and many coastal locations will have an additional regional reservoir offset (deltaR) (Reimer and Reimer 2006)[^8]. The on-line database at <http://calib.org/marine/> is very useful for this; it features the radiocarbon ages and deltaR of many shells of known collection date. The data from this database were downloaded (in August 2024) and can be queried. For example, a map can be drawn with all shell data within certain coordinates:
 
-```{r, fig.width=5, fig.asp=1}
+
+```{r, eval=FALSE}
 myshells <- map.shells(S=54, W=-8, N=61, E=0) # the northern part of the UK
 ```
 
-If you don't have the R package 'rnaturalearth' installed, you will be suggested to install it if possible, because the resulting maps will look much nicer. 
+```{r, fig.width=5, fig.asp=1, echo=FALSE}
+if(requireNamespace("sf", quietly = TRUE) &&
+  requireNamespace("rnaturalearth", quietly = TRUE) &&
+  requireNamespace("rnaturalearthdata", quietly = TRUE)) {
+    myshells <- map.shells(S = 54, W = -8, N = 61, E = 0, mapsize = "medium")
+  } else {
+      message("Mapping dependencies not available; skipping map in vignette.")
+      myshells <- NULL
+	}
+```
+
+If you don't have the R package 'rnaturalearth' installed, you will be asked to install it if possible, because the resulting maps will look much nicer. Same for the github package 'rnaturalearthhires', which produces more detailed maps.
 
 The output can also be queried:
 
@@ -430,9 +442,9 @@ head(myshells)
 shells.mean(myshells)
 ```
 
-You can also extract say the 20 shells closest to a coordinate, e.g., 120 East and 10 North:
+You can also extract say the 20 shells closest to a coordinate, e.g., 20 East and 30 South:
 ```{r, fig.width=5, fig.asp=1}
-myshells <- find.shells(120, 10, 20)
+myshells <- find.shells(20, -30, 20)
 shells.mean(myshells, distance=TRUE)
 ```
 
