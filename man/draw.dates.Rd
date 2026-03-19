@@ -11,6 +11,10 @@ draw.dates(
   cc = 1,
   postbomb = FALSE,
   bombalert = TRUE,
+  glue = 1,
+  as.F = TRUE,
+  is.F = FALSE,
+  is.pMC = FALSE,
   deltaR = 0,
   deltaSTD = 0,
   thiscurve = c(),
@@ -28,23 +32,23 @@ draw.dates(
   BCAD = FALSE,
   draw.hpd = TRUE,
   hpd.border = NA,
-  hpd.col = rgb(0, 0, 1, 0.7),
-  cal.hpd.col = rgb(0, 0.5, 0.5, 0.35),
   rounded = 0.1,
   every = 1,
   mirror = TRUE,
   up = TRUE,
   draw.base = TRUE,
   col = rgb(0, 0, 1, 0.3),
-  border = rgb(0, 0, 1, 0.5),
+  border = col,
+  hpd.col = col,
   cal.col = rgb(0, 0.5, 0.5, 0.35),
-  cal.border = rgb(0, 0.5, 0.5, 0.35),
+  cal.border = cal.col,
+  cal.hpd.col = cal.col,
   add = FALSE,
   ka = FALSE,
   rotate.axes = FALSE,
   normalise = TRUE,
   cc.col = rgb(0, 0.5, 0, 0.5),
-  cc.border = rgb(0, 0.5, 0, 0.5),
+  cc.border = cc.col,
   cc.resample = 5,
   age.lab = c(),
   age.lim = c(),
@@ -57,7 +61,7 @@ draw.dates(
   label.x = 1,
   label.y = c(),
   label.cex = 0.8,
-  label.col = border,
+  label.col = col,
   label.offset = c(0, 0),
   label.adj = c(1, 0),
   label.rot = 0,
@@ -78,6 +82,14 @@ draw.dates(
 \item{postbomb}{Whether or not this is a postbomb age. Defaults to FALSE.}
 
 \item{bombalert}{Warn if a date is close to the lower limit of the IntCal curve. Defaults to \code{postbomb=TRUE}.}
+
+\item{glue}{Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc.}
+
+\item{as.F}{Whether or not to calculate ages in the F14C timescale. Defaults to \code{as.F=TRUE}, since it takes better care of asymmetric distributions and older dates close to the dating limit. If set as \code{as.F=FALSE}, the C14 timescale will be used.}
+
+\item{is.F}{Use \code{is.F=TRUE} if the date and error are entered as F14C.}
+
+\item{is.pMC}{Use \code{is.pMC=TRUE} if the date and error are entered as pMC.}
 
 \item{deltaR}{Age offset (e.g. for marine samples). Can also be provided as option 'reservoir'.}
 
@@ -111,11 +123,7 @@ draw.dates(
 
 \item{draw.hpd}{Whether or not to draw the hpd ranges as a line}
 
-\item{hpd.border}{Colour of the border of the hpd intervals. Not drawn by default.}
-
-\item{hpd.col}{Colour of the hpd rectangle for all dates or radiocarbon dates}
-
-\item{cal.hpd.col}{Colour of the hpd rectangle for cal BP dates}
+\item{hpd.border}{Colour of the border of the hpd intervals. Not drawn by default. Defaults to the colour of `col`.}
 
 \item{rounded}{Rounding for probabilities of reported hpd ranges. Defaults to 1 decimal.}
 
@@ -129,11 +137,15 @@ draw.dates(
 
 \item{col}{Colour of the inside of the distribution}
 
-\item{border}{Colour of the border of the distribution}
+\item{border}{Colour of the border of the distribution. Defaults to the colour of `col`.}
+
+\item{hpd.col}{Colour of the hpd rectangle for all dates or radiocarbon dates. Defaults to the colour of `col`.}
 
 \item{cal.col}{Colour of the inside of distribution of non-radiocarbon dates that didn't need calibration}
 
-\item{cal.border}{Colour of the border of the distribution of non-radiocarbon dates that didn't need calibration}
+\item{cal.border}{Colour of the border of the distribution of non-radiocarbon dates that didn't need calibration. Defaults to the colour of `cal.col`.}
+
+\item{cal.hpd.col}{Colour of the hpd rectangle for cal BP dates. Defaults to the colour of `cal.col`.}
 
 \item{add}{Whether or not to add the dates to an existing plot. If set to FALSE (default), a plot will be set up.}
 
@@ -171,7 +183,7 @@ draw.dates(
 
 \item{label.cex}{Size of labels.}
 
-\item{label.col}{Colour of the labels. Defaults to the colour given to the borders of the dates.}
+\item{label.col}{Colour of the labels. Defaults to the colour given to that of the dates.}
 
 \item{label.offset}{Offsets of the positions of the depths/labels, giving the x and y offsets. Defaults to c(0,0).}
 

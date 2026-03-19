@@ -10,6 +10,7 @@ calibrate(
   cc = 1,
   postbomb = FALSE,
   bombalert = TRUE,
+  glue = 0,
   deltaR = 0,
   deltaSTD = 0,
   thiscurve = c(),
@@ -26,16 +27,16 @@ calibrate(
   cal.lim = c(),
   C14.lim = c(),
   cc.col = rgb(0, 0.5, 0, 0.7),
-  cc.fill = rgb(0, 0.5, 0, 0.7),
+  cc.border = cc.col,
   date.col = "red",
   dist.col = rgb(0, 0, 0, 0.3),
-  dist.fill = rgb(0, 0, 0, 0.3),
-  hpd.fill = rgb(0, 0, 0, 0.3),
+  dist.border = dist.col,
+  hpd.col = dist.col,
   dist.height = 0.3,
   dist.float = c(0.01, 0.01),
   cal.rev = TRUE,
   yr.steps = FALSE,
-  cc.resample = 5,
+  cc.resample = NA,
   threshold = 5e-04,
   edge = TRUE,
   normal = TRUE,
@@ -43,7 +44,7 @@ calibrate(
   t.b = 4,
   rounded = 1,
   round.age = c(),
-  round.hpd.ages = 0,
+  round.hpd.ages = c(),
   round.hpd.probs = 1,
   every = NA,
   extend.range = 0.05,
@@ -73,6 +74,8 @@ calibrate(
 \item{postbomb}{Whether or not this is a postbomb age. Defaults to FALSE.}
 
 \item{bombalert}{Warn if a date is close to the lower limit of the IntCal curve. Defaults to \code{postbomb=TRUE}.}
+
+\item{glue}{Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc.}
 
 \item{deltaR}{Age offset (e.g. for marine samples). Can also be provided as option 'reservoir'.}
 
@@ -104,17 +107,17 @@ calibrate(
 
 \item{C14.lim}{Minimum and maximum of C-14 axis (default calculated automatically).}
 
-\item{cc.col}{Colour of the lines of the calibration curve. Defaults to semi-transparent dark green; \code{cc.col=rgb(0,.5,0,0.7)}.}
+\item{cc.col}{Colour of the calibration curve. Defaults to semi-transparent dark green; \code{cc.col=rgb(0,.5,0,0.7)}.}
 
-\item{cc.fill}{Colour of the inner part of the calibration curve. Defaults to semi-transparent dark green; \code{cc.col=rgb(0,.5,0,0.7)}.}
+\item{cc.border}{Colour of the borders of the calibration curve. Defaults to cc.col.}
 
 \item{date.col}{Colour of the "dot-bar" plot of the C14 date. Defaults to \code{date.col="red"}.}
 
-\item{dist.col}{Colour of the outer lines of the distributions. Defaults to semi-transparent grey, \code{dist.col=rgb(0,0,0,0.2)}.}
+\item{dist.col}{Colour of the distributions. Defaults to semi-transparent grey, \code{dist.col=rgb(0,0,0,0.2)}.}
 
-\item{dist.fill}{Colour of the inner part of the distributions. Defaults to semi-transparent grey, \code{dist.col=rgb(0,0,0,0.2)}.}
+\item{dist.border}{Colour of the borders of the distributions. Defaults to that of dist.col.}
 
-\item{hpd.fill}{Colour of the highest posterior density. Defaults to semi-transparent grey, \code{dist.col=rgb(0,0,0,0.3)}.}
+\item{hpd.col}{Colour of the highest posterior density. Defaults to semi-transparent grey, \code{dist.col=rgb(0,0,0,0.3)}.}
 
 \item{dist.height}{Maximum height of the C14 and calibrated distributions (as proportion of the invisible secondary axes). Defaults to 1.8.}
 
@@ -124,7 +127,7 @@ calibrate(
 
 \item{yr.steps}{Temporal resolution at which C-14 ages are calibrated (in calendar years). By default follows the spacing in the calibration curve.}
 
-\item{cc.resample}{The IntCal20 curves have different densities (every year between 0 and 5 kcal BP, then every 5 yr up to 15 kcal BP, then every 10 yr up to 25 kcal BP, and then every 20 yr up to 55 kcal BP). If calibrated ages span these density ranges, their drawn heights can differ, as can their total areas (which should ideally all sum to the same size). To account for this, resample to a constant time-span, using, e.g., cc.resample=5 for 5-yr timespans.}
+\item{cc.resample}{The IntCal20 curves have different densities (every year between 0 and 5 kcal BP, then every 5 yr up to 15 kcal BP, then every 10 yr up to 25 kcal BP, and then every 20 yr up to 55 kcal BP). If calibrated ages span these density ranges, their drawn heights can differ, as can their total areas (which should ideally all sum to the same size). To account for this, resample to a constant time-span, using, e.g., cc.resample=5 for 5-yr timespans. Defaults to no resampling (cc.resample=NA).}
 
 \item{threshold}{Below which value should probabilities be excluded from calculations.}
 

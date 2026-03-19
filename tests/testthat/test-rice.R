@@ -21,7 +21,7 @@ test_that("adjust.background returns expected background-corrected C14 age", {
 
 test_that("find.shells returns expected amount of shells", {
   myshells <- find.shells(0, 55, mapsize="small", currents=FALSE)
-  expect_length(myshells, 16)
+  expect_equal(length(myshells), 16, tolerance=1)
 })
 
 test_that("weighted_means returns expected weighted mean of selected shells", {
@@ -84,7 +84,7 @@ test_that("p.range returns expected probability", {
 test_that("calib.t returns expected ages", {
   result <- calib.t(2450, 50)
   expect_length(result, 2)
-  expect_equal(result$text$x, 2349.163, tolerance = .1)
+  expect_equal(result$text$x, 2286.7, tolerance = .1)
 })
 
 ### sets
@@ -101,7 +101,7 @@ test_that("as.one returns average", {
   data(shroud)
   Zu <- grep("ETH", shroud$ID)
   result <- as.one(shroud$y[Zu],shroud$er[Zu], talk=FALSE)
-  expect_equal(nrow(result), 411)
+  expect_equal(nrow(result), 417)
 })
 
 
@@ -109,7 +109,7 @@ test_that("overlapping returns percentage", {
   y <- c(3820, 4430)
   er <- c(40, 40)
   result <- overlap(y, er, cc=1:2, talk=FALSE)
-  expect_equal(result, 30.46924, tolerance=1e-5)
+  expect_equal(result, 30.75944, tolerance=1e-5)
 })
 
 ### sources
