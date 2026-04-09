@@ -1,7 +1,7 @@
 Package: rice
 Type: Package
 Title: Radiocarbon Equations
-Version: 2.0.1
+Version: 2.1.0
 Authors@R: c(
   person("Maarten", "Blaauw", email="maarten.blaauw@qub.ac.uk", role=c("aut", "cre"),
     comment=c(ORCID="0000-0002-5680-1515")),
@@ -24,10 +24,10 @@ VignetteBuilder: knitr
 NeedsCompilation: no
 LazyData: true
 Config/testthat/edition: 3
-Packaged: 2026-03-18 10:25:06 UTC; maarten
+Packaged: 2026-04-09 09:44:27 UTC; maarten
 Author: Maarten Blaauw [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-5680-1515>),
   Paula Reimer [ctb] (ORCID: <https://orcid.org/0000-0001-9238-2146>),
   Vegard Martinsen [ctb] (ORCID: <https://orcid.org/0000-0002-7096-1806>)
 Repository: CRAN
-Date/Publication: 2026-03-19 08:20:07 UTC
+Date/Publication: 2026-04-09 10:20:02 UTC

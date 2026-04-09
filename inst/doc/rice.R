@@ -235,6 +235,9 @@ shells.mean(myshells, distance=TRUE)
 ## ----fig.width=5, fig.asp=1, eval=FALSE---------------------------------------
 # find.shells(120, 10, 50, browse=TRUE)
 
+## ----fig.width=5, fig.asp=1, eval=FALSE---------------------------------------
+# p3k14c <- map.dates()
+
 ## ----fig.width=4, fig.asp=1---------------------------------------------------
 set.seed(123)
 dates <- sort(sample(500:2500,5))
