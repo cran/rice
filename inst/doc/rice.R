@@ -11,8 +11,11 @@ library(rice)
 howmuchC14(0)
 howmuchC14(55e3)
 x <- seq(0, 55e3, length=100) # a sequence of ages
-y <- sapply(x, function(x) howmuchC14(x, talk=FALSE))
+y <- sapply(x, function(x) howmuchC14(x, talk=FALSE)[1])
 plot(x, y, type="l", xlab="time (cal BP)", ylab="C-14 remaining")
+
+## ----eval=FALSE---------------------------------------------------------------
+# radio(30000)
 
 ## -----------------------------------------------------------------------------
 adjust.fractionation(9000, -17) # the sample's d13C was measured at -17
@@ -118,7 +121,7 @@ overlap(y, er, cc=cc)
 
 ## ----fig.width=4, fig.asp=1---------------------------------------------------
 data(shroud)
-calibratable(shroud$y, shroud$er, shroud$ID)
+calibratable(shroud$y, shroud$er, shroud$ID, BCAD=TRUE)
 
 ## ----fig.width=5, fig.asp=.8--------------------------------------------------
 contaminate(5000, 20, 10, F.contam=1)
@@ -250,10 +253,21 @@ draw.dates(dates, errors, depths, BCAD=TRUE, labels=my.labels, age.lim=c(0, 1800
 plot(250*1:5, 5:1, xlim=c(0, 1800), ylim=c(5,0), xlab="AD", ylab="dates")
 draw.dates(dates, errors, depths, BCAD=TRUE, add=TRUE, labels=my.labels, mirror=FALSE)
 
-## ----fig.width=4, fig.asp=1---------------------------------------------------
-par(bg="black", mar=rep(1, 4))
-n <- 50; set.seed(1)
-draw.dates(rnorm(n, 2450, 30), rep(25, n), 1:n,
-  mirror=FALSE, draw.base=FALSE, draw.hpd=FALSE, col="white",
-  threshold=1e-28, age.lim=c(2250, 2800), up=TRUE, peak=30)
+## ----fig.width=5, fig.asp=1---------------------------------------------------
+n <- 50; set.seed(42) # number of dates; always the same answer
+from <- 2200; to <- 2900 # calendar age limits
+y <- rnorm(n, 2620, 30) - 6*(1:n) # going through the Hallstatt Plateau
+
+# set up an empty plot with black background
+par(bg="black", mar=rep(1,4))
+plot(0, type="n", xlim=c(to, from), ylim=c(n,-2), xlab="", ylab="")
+
+for(i in 1:n) { # for each date...
+  tmp <- draw.dates(y[i], 20, i, add=TRUE,
+    mirror=FALSE, draw.hpd=FALSE, col="black", border=NA,
+    peak=4, as.unit=TRUE) # distributions in black
+  outline <- approx(tmp$ages, tmp$prob, seq(from, to, length=500), rule=2)
+  y0 <- rnorm(500, i, 0.05) # make some noise
+  lines(outline$x, y0-4*outline$y, col="white")
+}
 

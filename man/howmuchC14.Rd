@@ -7,6 +7,7 @@
 howmuchC14(
   age,
   wght = 1,
+  is.F = FALSE,
   use.cc = TRUE,
   Av = 6.02214076e+23,
   C14.1950 = 1.176e-12,
@@ -14,24 +15,28 @@ howmuchC14(
   format = "g",
   cc = 1,
   postbomb = FALSE,
+  glue = 0,
   cc.dir = NULL,
   thiscurve = NULL,
   talk = TRUE,
+  as.AMS = TRUE,
   decimals = 3
 )
 }
 \arguments{
-\item{age}{The age of the sample (in cal BP per default, or in C14 BP is use.cc=FALSE).}
+\item{age}{The age of the sample (in cal BP per default, or in C14 BP if use.cc=FALSE).}
 
 \item{wght}{The weight of the sample (in mg). Defaults to 1 mg.}
+
+\item{is.F}{By default, ages are assumed to be in either cal BP or 14C BP. If \code{is.F=TRUE}, age is assumed to be on the F14C scale.}
 
 \item{use.cc}{Whether or not to use the calibration curve. If set to \code{use.cc=FALSE}, then we assume that the age is the radiocarbon age (this enables ages beyond the reach of the calibration curves to be used).}
 
 \item{Av}{Avogadro's number, used to calculate the number of carbon atoms in the sample.}
 
-\item{C14.1950}{The standard 14C/C ratio back in AD 1950 (1.176e-12, so around 1 in 1 trillion carbon atoms was a 14C atom at that moment in time.}
+\item{C14.1950}{The standard 14C/C ratio at 0 cal BP (AD 1950), defined as 95\% of the C-14 activity of NBS Oxalic Acid I (oxI), normalized to d13C=–25 permille.}
 
-\item{current}{The current of 12C+ ions arriving at the Faraday counter. Defaults to \code{current=25e-6}, 25 micro-Ampere.}
+\item{current}{The beam current of 12C+ ions as measured at the Faraday cup (C12 detector). Defaults to \code{current=25e-6}, 25 microamperes, a typical value for graphite targets on modern AMS systems. Gas targets generally yield c. 4-5 times lower currents.}
 
 \item{format}{The format of the printed numbers. Defaults to either scientific (for large numbers) or as fixed-point, depending on the size of the number.}
 
@@ -39,11 +44,15 @@ howmuchC14(
 
 \item{postbomb}{Whether or not to use a postbomb curve (see \code{caldist()}).}
 
+\item{glue}{Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.}
+
 \item{cc.dir}{Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.}
 
 \item{thiscurve}{As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).}
 
 \item{talk}{Whether or not to provide feedback (defaults to TRUE).}
+
+\item{as.AMS}{If set to true, will calculate how many atoms would be counted in an AMS}
 
 \item{decimals}{Number of decimals to be returned for F and atom counts.}
 }
@@ -55,7 +64,10 @@ Calculate the expected amount of remaining C14 atoms in a sample, given its weig
 }
 \details{
 The number of carbon atoms in the sample is estimated. Given the known C14/C ratio at F=1, and given the sample's age, we can estimate the number of remaining C14 atoms. Given a 12C current at the detector end of an AMS, we can then also calculate how many 14C ions would be counted per second and minute. 
-Note that backgrounds are not modelled (but could be investigated by e.g. typing \code{howmuchC14(45e3)} which gives as c. 1 background count per second).
+Measured C14 activities/concentrations are expressed relative to 95% of the 14C/C ratio of the Oxalic Acid I (OxI) standard (and normalised to d13C=-25 permille). This standard was made of oxalic acid from a 1957 beet sugar crop, distributed by the US National Bureau of Standards. When this standard ran out, in 1977 a French beetroot crop was prepared the same way and distributed as OxII (cross-calibrated to OxI and still in use by most C-14 laboratories).  
+This standard ratio, "modern" (F14C=1) is 1.176e-12, or in other words, c. 1.2 C-14 atoms per 1 trillion carbon atoms. Note that this is a conventional reference value, not the actual atmospheric 14C/C ratio in AD 1950. Due to the Suess effect (dilution by CO2 from C14-free fossil fuel combustion), the real atmospheric ratio in AD 1950 was already slightly lower.
+
+Note that backgrounds are not modelled (but could be investigated by e.g. typing \code{howmuchC14(45e3)} which gives on the order of 1 background count per second). The calculated C14 count rate assumes no isotopic fractionation.
 }
 \examples{
   howmuchC14(0) # recent sample

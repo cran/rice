@@ -11,6 +11,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+
 # Introduction
 
 Radiocarbon dating requires a range of calculations, for example calibration[^1][^2][^3][^4], translations between pMC, $\text{F}^{14}\text{C}$, $^{14}\text{C}$ age and $\Delta^{14}\text{C}$, and assessing the impacts of contamination. This package provides functions to do so in R.
@@ -45,9 +46,19 @@ C-14, or radiocarbon, is a radioactive isotope that decays with a half-life of a
 howmuchC14(0)
 howmuchC14(55e3)
 x <- seq(0, 55e3, length=100) # a sequence of ages
-y <- sapply(x, function(x) howmuchC14(x, talk=FALSE))
+y <- sapply(x, function(x) howmuchC14(x, talk=FALSE)[1])
 plot(x, y, type="l", xlab="time (cal BP)", ylab="C-14 remaining")
 ```
+
+Younger samples will have more C-14 atoms left than older ones, and thus will get higher counts-per-second at the AMS's C-14 detector. Want to hear a 'sonification' of the counts-per-second of C-14 atoms? The frequency of the tone relates to the counts per second, and the clicks represent the particles crashing into the detector. A visualisation of the counts as well as how they translate into a C-14 age is also provided. (This requires the 'audio' R package to be installed; if it isn't, a notification will be displayed with installation instructions.)
+
+```{r, eval=FALSE}
+radio(30000)
+```
+
+<img src="./radio.png" width="400" />
+
+---
 
 Radiocarbon laboratories correct their measurements for fractionation (to -25 &permil; by default) and for background measurements before they are reported. These calculations can be seen here:
 
@@ -256,7 +267,7 @@ The calibrated ranges of radiocarbon dates can also be displayed in a table (eit
 
 ```{r, fig.width=4, fig.asp=1}
 data(shroud)
-calibratable(shroud$y, shroud$er, shroud$ID)
+calibratable(shroud$y, shroud$er, shroud$ID, BCAD=TRUE)
 ```
 
 # Contamination
@@ -498,20 +509,29 @@ draw.dates(dates, errors, depths, BCAD=TRUE, add=TRUE, labels=my.labels, mirror=
 
 or get creative (inspired by Jocelyn Bell Burnell[^12], Joy Division[^13] and the Hallstatt Plateau[^14]):
 
-```{r, fig.width=4, fig.asp=1}
-par(bg="black", mar=rep(1, 4))
-n <- 50; set.seed(1)
-draw.dates(rnorm(n, 2450, 30), rep(25, n), 1:n,
-  mirror=FALSE, draw.base=FALSE, draw.hpd=FALSE, col="white",
-  threshold=1e-28, age.lim=c(2250, 2800), up=TRUE, peak=30)
+```{r, fig.width=5, fig.asp=1}
+n <- 50; set.seed(42) # number of dates; always the same answer
+from <- 2200; to <- 2900 # calendar age limits
+y <- rnorm(n, 2620, 30) - 6*(1:n) # going through the Hallstatt Plateau
+
+# set up an empty plot with black background
+par(bg="black", mar=rep(1,4))
+plot(0, type="n", xlim=c(to, from), ylim=c(n,-2), xlab="", ylab="")
+
+for(i in 1:n) { # for each date...
+  tmp <- draw.dates(y[i], 20, i, add=TRUE,
+    mirror=FALSE, draw.hpd=FALSE, col="black", border=NA,
+    peak=4, as.unit=TRUE) # distributions in black
+  outline <- approx(tmp$ages, tmp$prob, seq(from, to, length=500), rule=2)
+  y0 <- rnorm(500, i, 0.05) # make some noise
+  lines(outline$x, y0-4*outline$y, col="white")
+}
 ```
 
 
-[^1]: Stuiver, R., Polach, H.A., 1977. Discussion: reporting of 14C data.
-*Radiocarbon* 19, 355-363 <http://dx.doi.org/10.1017/S0033822200003672>
+[^1]: Stuiver, R., Polach, H.A., 1977. Discussion: reporting of 14C data. *Radiocarbon* 19, 355-363 <http://dx.doi.org/10.1017/S0033822200003672>
 
-[^2]: Reimer, P.J., Brown, T.A., Reimer, R.W., 2004. Discussion: reporting
-and calibration of post-bomb 14C Data. *Radiocarbon* 46, 1299-1304 <http://dx.doi.org/10.1017/S0033822200033154>
+[^2]: Reimer, P.J., Brown, T.A., Reimer, R.W., 2004. Discussion: reporting and calibration of post-bomb 14C Data. *Radiocarbon* 46, 1299-1304 <http://dx.doi.org/10.1017/S0033822200033154>
 
 [^3]: Millard, R., 2014. Conventions for reporting radiocarbon determinations. *Radiocarbon* 56, 555-559 <http://dx.doi.org/10.2458/56.17455>
 

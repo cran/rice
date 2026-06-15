@@ -32,12 +32,12 @@
 #'   fromto(0, "BCAD")
 #'   fromto(2450, "C14")
 #' @export
-fromto <- function(x, from="calBP", cc=1, postbomb=1, cc.dir=NULL, thiscurve=NULL, zero=FALSE, width=c(), digits=0, C14.col=rgb(0,0,1,.5), Delta14C.col=rgb(0,.4,0,.4), ka=FALSE, cal.rev=TRUE, legend.size=.7) {
+fromto <- function(x, from="calBP", cc=1, postbomb=0, cc.dir=NULL, thiscurve=NULL, zero=FALSE, width=c(), digits=0, C14.col=rgb(0,0,1,.5), Delta14C.col=rgb(0,.4,0,.4), ka=FALSE, cal.rev=TRUE, legend.size=.7) {
   if(cc==2)
     Cc <- rintcal::ccurve(cc, postbomb=FALSE, cc.dir=cc.dir) else
       if(postbomb)
-        Cc <- rintcal::glue.ccurves(cc, postbomb, cc.dir=cc.dir) else
-          Cc <- rintcal::ccurve(cc, postbomb, cc.dir=cc.dir)   
+        Cc <- rintcal::glue.ccurves(prebomb=cc, postbomb, cc.dir=cc.dir) else
+          Cc <- rintcal::ccurve(cc, postbomb=FALSE, cc.dir=cc.dir)
 
   if(grepl("bp", tolower(from))) { # cal BP
     if(x < -69.5 || x > 55e3) # limits postbomb & prebomb
@@ -46,10 +46,10 @@ fromto <- function(x, from="calBP", cc=1, postbomb=1, cc.dir=NULL, thiscurve=NUL
       message("please provide a postbomb curve")
     calbp <- x
     bcad <- calBPtoBCAD(x, zero)
-    c14 <- calBPtoC14(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[1]
-    f14c <- calBPtoF14C(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[1]
-    pmc <- calBPtopMC(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[1]
-    delta14c <- calBPtoDelta14C(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[1]
+    c14 <- calBPtoC14(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[,1]
+    f14c <- calBPtoF14C(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[,1]
+    pmc <- calBPtopMC(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[,1]
+    delta14c <- calBPtoDelta14C(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[,1]
     message(calbp, " cal BP equals ", round(bcad, digits), " cal BC/AD, ", round(c14, digits),
       " 14C BP, ", round(f14c, digits+2), " F14C, ", round(pmc, digits+2),
       " pMC, ", round(delta14c, digits+2), " Delta14C (cc=", cc, ")\n")
@@ -62,10 +62,10 @@ fromto <- function(x, from="calBP", cc=1, postbomb=1, cc.dir=NULL, thiscurve=NUL
       message("please provide a postbomb curve")
     bcad <- x
     calbp <- BCADtocalBP(x, zero)
-    c14 <- BCADtoC14(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[1]
-    f14c <- BCADtoF14C(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[1]
-    pmc <- BCADtopMC(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[1]
-    delta14c <- BCADtoDelta14C(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[1]
+    c14 <- BCADtoC14(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[,1]
+    f14c <- BCADtoF14C(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[,1]
+    pmc <- BCADtopMC(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[,1]
+    delta14c <- BCADtoDelta14C(x, cc=cc, postbomb=postbomb, cc.dir=cc.dir, thiscurve=thiscurve)[,1]
     message(bcad, " cal BC/AD equals ", round(calbp, digits), " cal BP, ", round(c14, digits), 
       " 14C BP, ", round(f14c, digits+2), " F14C, ", round(pmc, digits+2),
       " pMC, ", round(delta14c, digits+2), " Delta14C (cc=", cc, ")\n")
@@ -75,8 +75,8 @@ fromto <- function(x, from="calBP", cc=1, postbomb=1, cc.dir=NULL, thiscurve=NUL
     c14 <- x
     calbp <- unique(C14tocalBP(x))
     bcad <- calBPtoBCAD(calbp)
-    f14c <- C14toF14C(x)[1]
-    pmc <- C14topMC(x)[1]
+    f14c <- C14toF14C(x)[,1]
+    pmc <- C14topMC(x)[,1]
     delta14c <- NA # do not calculate since no theta
     message(c14, " 14C BP equals c. ", paste(round(calbp, digits), collapse="/"), " cal BP, c. ", 
       paste(round(bcad, digits), collapse="/"), " cal BC/AD, ",
@@ -85,7 +85,7 @@ fromto <- function(x, from="calBP", cc=1, postbomb=1, cc.dir=NULL, thiscurve=NUL
   
   if(grepl("f", tolower(from))) { # F14C
     f14c <- x
-    c14 <- F14CtoC14(x)[1]
+    c14 <- F14CtoC14(x)[,1]
     calbp <- unique(C14tocalBP(c14))
     bcad <- calBPtoBCAD(calbp)
     pmc <- 100*x
@@ -99,7 +99,7 @@ fromto <- function(x, from="calBP", cc=1, postbomb=1, cc.dir=NULL, thiscurve=NUL
   if(grepl("p", tolower(from))) { # pMC
     pmc <- x
     f14c <- pmc/100
-    c14 <- pMCtoC14(x)[1]
+    c14 <- pMCtoC14(x)[,1]
     calbp <- unique(C14tocalBP(c14))
     bcad <- calBPtoBCAD(calbp)
     pmc <- 100*x
@@ -161,7 +161,8 @@ fromto <- function(x, from="calBP", cc=1, postbomb=1, cc.dir=NULL, thiscurve=NUL
   par(mar=c(4,3,3,3))
   mincalbp <- min(calbp) - width
   maxcalbp <- max(calbp) + width
-  Delta14C.coors <- draw.ccurve(mincalbp, maxcalbp, cc1=cc, cc2=cc, cc1.postbomb=TRUE, cc2.postbomb=TRUE, timescale2="d", cc2.col=Delta14C.col, cc2.fill=Delta14C.col, add.yaxis=TRUE, cc.dir=cc.dir, ka=ka, bty="n", legend=NA, xaxs="i", yaxt="n", c14.lab="", cal.rev=cal.rev)
+  message("mincalbp=", mincalbp, ", maxcalbp=", maxcalbp, ", cc1=", cc, ", cc2=", cc, ", cc1.postbomb=", postbomb, ", cc2.postbomb=", postbomb)
+  Delta14C.coors <- draw.ccurve(mincalbp, maxcalbp, cc1=cc, cc2=cc, cc1.postbomb=postbomb, cc2.postbomb=postbomb, timescale2="d", cc2.col=Delta14C.col, cc2.fill=Delta14C.col, add.yaxis=TRUE, cc.dir=cc.dir, ka=ka, bty="n", legend=NA, xaxs="i", yaxt="n", c14.lab="", cal.rev=cal.rev)
   C14.coors <- par("usr")
   if(!is.na(delta14c))
     f.y <- as.numeric(((delta14c-Delta14C.coors[3])/(Delta14C.coors[4] - Delta14C.coors[3])) * (C14.coors[4] - C14.coors[3]) + C14.coors[3])
@@ -183,9 +184,9 @@ fromto <- function(x, from="calBP", cc=1, postbomb=1, cc.dir=NULL, thiscurve=NUL
   mtext(expression(Delta^14*C), 4, 2, col=Delta14C.col)
 
   abline(v=calbp, lty=2)
-  segments(C14.coors[1]-1e3, c14, calbp, c14, lty=2, col=C14.col)
+  segments(C14.coors[1], c14, calbp, c14, lty=2, col=C14.col)
   if(!is.na(delta14c))
-    segments(calbp, f.y, C14.coors[2]+1e3, f.y, lty=2, col=Delta14C.col)
+    segments(calbp, f.y, C14.coors[2], f.y, lty=2, col=Delta14C.col)
 
   invisible(values)
 }
@@ -244,6 +245,7 @@ calBPtob2k <- function(x)
 #' @param x The cal BP year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
@@ -252,19 +254,29 @@ calBPtob2k <- function(x)
 #' @examples
 #' calBPtoC14(100)
 #' @export
-calBPtoC14 <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
+calBPtoC14 <- function(x, cc=1, postbomb=FALSE, glue=0, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
   if(is.data.frame(x) && ncol(x) == 1)
     x <- x[[1]] # accept either a data.frame or a vector
   if(is.null(thiscurve)) {
-    if(cc == 2) # Marine20 has no postbomb counterpart
-      cc <- rintcal::ccurve(cc=cc, postbomb=postbomb, cc.dir=cc.dir) else
-        if(postbomb)
-          cc <- rintcal::glue.ccurves(prebomb=cc, postbomb=postbomb, cc.dir=cc.dir) else
-            cc <- rintcal::ccurve(cc=cc, postbomb=postbomb, cc.dir=cc.dir) 
+    if(is.character(glue))
+      Cc <- rintcal::glue.ccurves(prebomb=cc, postbomb=glue, cc.dir, as.F=FALSE, as.pMC=FALSE) else
+        if(glue>0) {
+          if(glue %in% 1:3)
+            Cc <- rintcal::glue.ccurves(prebomb=1, postbomb=glue, cc.dir, as.F=FALSE, as.pMC=FALSE) else
+              if(glue %in% 4:5)
+                Cc <- rintcal::glue.ccurves(prebomb=3, postbomb=glue, cc.dir, as.F=FALSE, as.pMC=FALSE) else
+                  stop("please provide an integer for glue between 0 and 5")
+        } else
+            if(cc == 2) # Marine20 has no postbomb counterpart
+              Cc <- rintcal::ccurve(cc=cc, postbomb=postbomb, cc.dir=cc.dir) else
+                if(postbomb)
+                  Cc <- rintcal::glue.ccurves(prebomb=cc, postbomb=postbomb, cc.dir=cc.dir) else
+                    Cc <- rintcal::ccurve(cc=cc, postbomb=postbomb, cc.dir=cc.dir)
     } else
-        cc <- thiscurve
-  mu <- approx(cc[,1], cc[,2], x, rule=rule)$y
-  er <- approx(cc[,1], cc[,3], x, rule=rule)$y
+        Cc <- thiscurve
+
+  mu <- approx(Cc[,1], Cc[,2], x, rule=rule)$y
+  er <- approx(Cc[,1], Cc[,3], x, rule=rule)$y
 
   return(round(data.frame(C14=mu, er=er), roundby))
 }
@@ -279,6 +291,7 @@ calBPtoC14 <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=N
 #' @param x The cal BP year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). 
@@ -287,8 +300,8 @@ calBPtoC14 <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=N
 #' @examples
 #'   calBPtoF14C(100)
 #' @export
-calBPtoF14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
-  y <- calBPtoC14(x, cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=Inf)
+calBPtoF14C <- function(x, cc=1, postbomb=FALSE, glue=0, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
+  y <- calBPtoC14(x, cc=cc, postbomb=postbomb, glue=glue, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=Inf)
   return(C14toF14C(y[,1], y[,2], roundby=roundby)) # is a data.frame; any rounding done at the end
 }
 
@@ -302,6 +315,7 @@ calBPtoF14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=
 #' @param x The cal BP year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). 
@@ -310,8 +324,8 @@ calBPtoF14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=
 #' @examples
 #'   calBPtopMC(100)
 #' @export
-calBPtopMC <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
-  y <- calBPtoC14(x, cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=Inf)
+calBPtopMC <- function(x, cc=1, postbomb=FALSE, glue=0, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
+  y <- calBPtoC14(x, cc=cc, postbomb=postbomb, glue=glue, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=Inf)
   return(C14topMC(y[,1], y[,2], roundby=roundby)) # data.frame; any rounding done at the end
 }
 
@@ -325,6 +339,7 @@ calBPtopMC <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=N
 #' @param x The cal BP year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). 
@@ -333,8 +348,8 @@ calBPtopMC <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=N
 #' @examples
 #'   calBPtoDelta14C(100)
 #' @export
-calBPtoDelta14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
-  F <- calBPtoF14C(x, cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=Inf)
+calBPtoDelta14C <- function(x, cc=1, postbomb=FALSE, glue=0, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
+  F <- calBPtoF14C(x, cc=cc, postbomb=postbomb, glue=glue, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=Inf)
   Deltamn <- F14CtoDelta14C(F[,1], t=x)
   Deltaup <- F14CtoDelta14C(F[,1]+F[,2], t=x)
   sdev <- Deltaup-Deltamn
@@ -398,6 +413,7 @@ BCADtob2k <- function(x, zero=FALSE)
 #' @param x The cal BC/AD year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param zero Whether or not zero BC/AD should be included. Defaults to \code{zero=FALSE}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
@@ -407,9 +423,9 @@ BCADtob2k <- function(x, zero=FALSE)
 #' @examples
 #'   BCADtoC14(100)
 #' @export
-BCADtoC14 <- function(x, cc=1, postbomb=FALSE, zero=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf)
+BCADtoC14 <- function(x, cc=1, postbomb=FALSE, glue=0, zero=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf)
   return(calBPtoC14(BCADtocalBP(x, zero=zero),
-    cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=roundby))
+    cc=cc, postbomb=postbomb, glue=glue, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=roundby))
 
 
 
@@ -421,6 +437,7 @@ BCADtoC14 <- function(x, cc=1, postbomb=FALSE, zero=FALSE, rule=1, cc.dir=NULL, 
 #' @param x The cal BC/AD year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param zero Whether or not zero BC/AD should be included. Defaults to \code{zero=FALSE}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
@@ -430,9 +447,9 @@ BCADtoC14 <- function(x, cc=1, postbomb=FALSE, zero=FALSE, rule=1, cc.dir=NULL, 
 #' @examples
 #'   BCADtoF14C(100)
 #' @export
-BCADtoF14C <- function(x, cc=1, postbomb=FALSE, zero=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf)
+BCADtoF14C <- function(x, cc=1, postbomb=FALSE, glue=0, zero=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf)
   return(calBPtoF14C(BCADtocalBP(x, zero=zero), 
-    cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=roundby))
+    cc=cc, postbomb=postbomb, glue=glue, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=roundby))
 
 
 
@@ -444,6 +461,7 @@ BCADtoF14C <- function(x, cc=1, postbomb=FALSE, zero=FALSE, rule=1, cc.dir=NULL,
 #' @param x The cal BC/AD year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param zero Whether or not zero BC/AD should be included. Defaults to \code{zero=FALSE}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
@@ -453,9 +471,9 @@ BCADtoF14C <- function(x, cc=1, postbomb=FALSE, zero=FALSE, rule=1, cc.dir=NULL,
 #' @examples
 #'   BCADtopMC(100)
 #' @export
-BCADtopMC <- function(x, cc=1, postbomb=FALSE, zero=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf)
+BCADtopMC <- function(x, cc=1, postbomb=FALSE, glue=0, zero=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf)
   return(calBPtopMC(BCADtocalBP(x, zero=zero), 
-    cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=roundby))
+    cc=cc, postbomb=postbomb, glue=glue, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=roundby))
 
 
 
@@ -468,6 +486,7 @@ BCADtopMC <- function(x, cc=1, postbomb=FALSE, zero=FALSE, rule=1, cc.dir=NULL, 
 #' @param zero Whether or not zero BC/AD should be included. Defaults to \code{zero=FALSE}.
 #' @param cc calibration curve (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). 
@@ -476,9 +495,9 @@ BCADtopMC <- function(x, cc=1, postbomb=FALSE, zero=FALSE, rule=1, cc.dir=NULL, 
 #' @examples
 #'   BCADtoDelta14C(1900)
 #' @export
-BCADtoDelta14C <- function(x, zero=FALSE, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
+BCADtoDelta14C <- function(x, zero=FALSE, cc=1, postbomb=FALSE, glue=0, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
   calBP <- BCADtocalBP(x, zero)
-  Fres <- calBPtoF14C(calBP, cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=Inf)
+  Fres <- calBPtoF14C(calBP, cc=cc, postbomb=postbomb, glue=glue, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=Inf)
   Deltamn <- F14CtoDelta14C(Fres[,1], t=calBP)
   Deltaup <- F14CtoDelta14C(Fres[,1]+Fres[,2], t=calBP)
 
@@ -532,6 +551,7 @@ b2ktoBCAD <- function(x, zero=FALSE) {
 #' @param x The b2k year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
@@ -540,9 +560,9 @@ b2ktoBCAD <- function(x, zero=FALSE) {
 #' @examples
 #'   b2ktoC14(100)
 #' @export
-b2ktoC14 <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf)
+b2ktoC14 <- function(x, cc=1, postbomb=FALSE, glue=0, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf)
   return(calBPtoC14(b2ktocalBP(x),
-    cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=roundby))
+    cc=cc, postbomb=postbomb, glue=glue, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=roundby))
 
 
 
@@ -554,6 +574,7 @@ b2ktoC14 <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NUL
 #' @param x The b2k year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
@@ -562,9 +583,9 @@ b2ktoC14 <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NUL
 #' @examples
 #'   b2ktoF14C(100)
 #' @export
-b2ktoF14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf)
+b2ktoF14C <- function(x, cc=1, postbomb=FALSE, glue=0, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf)
   return(calBPtoF14C(b2ktocalBP(x),
-    cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=roundby))
+    cc=cc, postbomb=postbomb, glue=glue, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=roundby))
 
 
 
@@ -576,6 +597,7 @@ b2ktoF14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NU
 #' @param x The b2k year.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
@@ -584,9 +606,9 @@ b2ktoF14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NU
 #' @examples
 #'   b2ktopMC(100)
 #' @export
-b2ktopMC <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf)
+b2ktopMC <- function(x, cc=1, postbomb=FALSE, glue=0, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf)
   return(calBPtopMC(b2ktocalBP(x),
-    cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=roundby))
+    cc=cc, postbomb=postbomb, glue=glue, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=roundby))
 
 
 
@@ -598,6 +620,7 @@ b2ktopMC <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NUL
 #' @param x The b2k year.
 #' @param cc calibration curve (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
@@ -606,9 +629,9 @@ b2ktopMC <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NUL
 #' @examples
 #'   b2ktoDelta14C(100)
 #' @export
-b2ktoDelta14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
+b2ktoDelta14C <- function(x, cc=1, postbomb=FALSE, glue=0, rule=1, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
   calBP <- b2ktocalBP(x)
-  Fres <- calBPtoF14C(calBP, cc=cc, postbomb=postbomb, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=Inf)
+  Fres <- calBPtoF14C(calBP, cc=cc, postbomb=postbomb, glue=glue, rule=rule, cc.dir=cc.dir, thiscurve=thiscurve, roundby=Inf)
   Deltamn <- F14CtoDelta14C(Fres[,1], t=calBP)[,1]
   Deltaup <- F14CtoDelta14C(Fres[,1]+Fres[,2], t=calBP)[,1]
 
@@ -625,6 +648,7 @@ b2ktoDelta14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurv
 #' @param y The C14 age. No errors are assumed. Can only deal with one C14 age at a time.
 #' @param cc calibration curve for C14 (see \code{caldist()}).
 #' @param postbomb Whether or not to use a postbomb curve (see \code{caldist()}).
+#' @param glue Glue postbomb and prebomb curves together. Defaults to 0 (none), can be 1 (IntCal20 + NH1), 2 (IntCal20 + NH2), 3 (IntCal20 + NH3), 4 (SHCal20 + SH1-2) or 5 (SHCal20 + SH3). Note that this will override the value of cc. Can also be used to glue other pre-bomb and post-bomb curves, e.g., \code{glue="NH1_monthly"}.
 #' @param rule How should R's approx function deal with extrapolation. If \code{rule=1}, the default, then NAs are returned for such points and if it is 2, the value at the closest data extreme is used.
 #' @param cc.dir Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error).
@@ -636,25 +660,36 @@ b2ktoDelta14C <- function(x, cc=1, postbomb=FALSE, rule=1, cc.dir=NULL, thiscurv
 #'   abline(h=y)
 #'   abline(v=C14tocalBP(y))
 #' @export
-C14tocalBP <- function(y, cc=1, postbomb=FALSE, rule=2, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
+C14tocalBP <- function(y, cc=1, postbomb=FALSE, glue=0, rule=2, cc.dir=NULL, thiscurve=NULL, roundby=Inf) {
   if(length(y) != 1)
     stop("can only deal with one y at a time")
-  if(is.null(thiscurve)) {
-    if(cc == 2) # Marine20 has no postbomb counterpart
-      cc <- rintcal::ccurve(cc=cc, postbomb=postbomb, cc.dir=cc.dir) else
-        if(postbomb)
-          cc <- rintcal::glue.ccurves(prebomb=cc, postbomb=postbomb, cc.dir=cc.dir) else
-            cc <- rintcal::ccurve(cc=cc, postbomb=postbomb, cc.dir=cc.dir)
-    } else
-        cc <- thiscurve
 
-  sel <- which((cc[,2] < (y+100) ) * (cc[,2] > (y-100)) > 0)
+  if(is.null(thiscurve)) {
+    if(is.character(glue))
+      Cc <- rintcal::glue.ccurves(prebomb=cc, postbomb=glue, cc.dir=cc.dir) else
+        if(glue>0) {
+          if(glue %in% 1:3)
+            Cc <- rintcal::glue.ccurves(prebomb=1, postbomb=glue, cc.dir=cc.dir, as.F=FALSE, as.pMC=FALSE) else
+              if(glue %in% 4:5)
+                Cc <- rintcal::glue.ccurves(prebomb=3, postbomb=glue, cc.dir=cc.dir, as.F=FALSE, as.pMC=FALSE) else
+                  stop("please provide an integer for glue between 0 and 5")
+        } else {
+            if(cc == 2) # Marine20 has no postbomb counterpart
+              Cc <- rintcal::ccurve(cc=cc, postbomb=postbomb, cc.dir=cc.dir) else
+              if(postbomb)
+                Cc <- rintcal::glue.ccurves(prebomb=cc, postbomb=postbomb, cc.dir=cc.dir) else
+                  Cc <- rintcal::ccurve(cc=cc, postbomb=postbomb, cc.dir=cc.dir)
+          }
+  } else
+      Cc <- thiscurve
+
+  sel <- which((Cc[,2] < (y+100) ) * (Cc[,2] > (y-100)) > 0)
   if(length(sel) == 0) # y lies beyond the curve
     return(NA)
 
-  cc <- cc[sel,]
-  x <- seq(min(cc[,1]), max(cc[,1]), length=1e3)
-  mu <- approx(cc[,1], cc[,2], x)$y
+  Cc <- Cc[sel,]
+  x <- seq(min(Cc[,1]), max(Cc[,1]), length=1e3)
+  mu <- approx(Cc[,1], Cc[,2], x)$y
 
   # Identify indices where y crosses the threshold
   sign_changes <- which((mu[-1] - y) * (mu[-length(mu)] - y) < 0)
@@ -667,7 +702,9 @@ C14tocalBP <- function(y, cc=1, postbomb=FALSE, rule=2, cc.dir=NULL, thiscurve=N
     mu1 <- mu[idx]; mu2 <- mu[idx + 1]
     intercepts[i] <- x1 + (x2 - x1) * (y - mu1) / (mu2 - mu1)
   }
-  return(round(intercepts, roundby))
+  if(length(intercepts) == 0)
+    return(NA) else
+      return(round(intercepts, roundby))
 }
 
 

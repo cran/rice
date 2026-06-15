@@ -22,6 +22,7 @@ draw.dates(
   timescale = "C",
   reservoir = c(),
   normal = TRUE,
+  same.peaks = FALSE,
   peak = 1,
   ex = c(),
   as.unit = FALSE,
@@ -39,6 +40,7 @@ draw.dates(
   draw.base = TRUE,
   col = rgb(0, 0, 1, 0.3),
   border = col,
+  lwd = 1,
   hpd.col = col,
   cal.col = rgb(0, 0.5, 0.5, 0.35),
   cal.border = cal.col,
@@ -49,6 +51,7 @@ draw.dates(
   normalise = TRUE,
   cc.col = rgb(0, 0.5, 0, 0.5),
   cc.border = cc.col,
+  cc.lwd = 1,
   cc.resample = 5,
   age.lab = c(),
   age.lim = c(),
@@ -66,7 +69,7 @@ draw.dates(
   label.adj = c(1, 0),
   label.rot = 0,
   cc.dir = NULL,
-  dist.res = 100,
+  dist.res = 1000,
   ...
 )
 }
@@ -105,6 +108,8 @@ draw.dates(
 
 \item{normal}{Use the normal distribution to calibrate dates (default TRUE). The alternative is to use the t model (Christen and Perez 2009).}
 
+\item{same.peaks}{Have each of the individual distributions peak to the same height. Defaults to FALSE}
+
 \item{peak}{Height multiplier for the distributions. Defaults to \code{peak=1}.}
 
 \item{ex}{synonym for peak}
@@ -139,6 +144,8 @@ draw.dates(
 
 \item{border}{Colour of the border of the distribution. Defaults to the colour of `col`.}
 
+\item{lwd}{Line width of the distribution}
+
 \item{hpd.col}{Colour of the hpd rectangle for all dates or radiocarbon dates. Defaults to the colour of `col`.}
 
 \item{cal.col}{Colour of the inside of distribution of non-radiocarbon dates that didn't need calibration}
@@ -158,6 +165,8 @@ draw.dates(
 \item{cc.col}{Colour of the calibration curve. Default semi-transparent darkgreen.}
 
 \item{cc.border}{Colour of the edges of the calibration curve. Default semi-transparent darkgreen.}
+
+\item{cc.lwd}{Line width of the calibration curve.}
 
 \item{cc.resample}{The IntCal20 curves have different densities (every year between 0 and 5 kcal BP, then every 5 yr up to 15 kcal BP, then every 10 yr up to 25 kcal BP, and then every 20 yr up to 55 kcal BP). If calibrated ages span these density ranges, their drawn heights can differ, as can their total areas (which should ideally all sum to the same size). To account for this, resample to a constant time-span, using, e.g., \code{cc.resample=5} for 5-yr timespans.}
 
@@ -193,7 +202,7 @@ draw.dates(
 
 \item{cc.dir}{Directory of the calibration curves. Defaults to where the package's files are stored (system.file), but can be set to, e.g., \code{cc.dir="curves"}.}
 
-\item{dist.res}{Resolution of the distribution polygons. Defaults to \code{dist.res=100}.}
+\item{dist.res}{Resolution of the age range capturing all distributions. Defaults to \code{dist.res=1000}.}
 
 \item{...}{Additional plotting options}
 }

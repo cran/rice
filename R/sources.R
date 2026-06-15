@@ -430,16 +430,18 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
   # sanity checks
   init.results <- (F.obs[,1]-F.target[,1]) / (F.contam - F.target[,1])
   if(init.results < 0)
-    message("(F.obs-F.target)/(F.contam-F.target) negative, contamination appears to be <0%!")
+    if(F.contam > F.obs[,1]) 
+      message("(F.obs-F.target)/(F.contam-F.target) negative, set F.contam to < F.obs?") else
+       message("(F.obs-F.target)/(F.contam-F.target) negative, contamination appears to be <0%!") 
   if(init.results > 1)
     message("(F.obs-F.target) > (F.contam-F.target), these values result in >100% contamination!")
   if(all(F.contam > F.target[,1]) && all(F.obs[,1] < F.target[,1]))
-    warning("The observed age (F.obs ", F.obs[,1], ") cannot be magicked into the younger target age (F.target ",
-      F.target[,1], "), because the activity of the contamination (F.contam, ", F.contam, 
+    warning("The observed age (F.obs ", round(F.obs[,1], decimals), ") cannot be magicked into the younger target age (F.target ",
+      round(F.target[,1], decimals), "), because the activity of the contamination (F.contam, ", F.contam, 
       ") is higher than F.target.", call.=FALSE)
   if(all(F.contam < F.target[,1]) && all(F.obs[,1] > F.target[,1]))
-    warning("The observed age (F.obs ", F.obs[,1], ") cannot be magicked into the older target age (F.target ",
-      F.target[,1], "), because the activity of the contamination (F.contam, ", F.contam, 
+    warning("The observed age (F.obs ", round(F.obs[,1], decimals), ") cannot be magicked into the older target age (F.target ",
+      round(F.target[,1], decimals), "), because the activity of the contamination (F.contam, ", F.contam, 
       ") is lower than F.target.", call.=FALSE)
   if(any(F.contam < 0))
     stop("F.contam cannot be smaller than 0", call.=FALSE)
@@ -448,7 +450,7 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
     if(!is.na(seed))
       if(is.numeric(seed))
         set.seed(seed) else
-          message("seed has to be numeric")	  	  
+          message("seed has to be numeric")
 
     safe_sample <- function(mean, sd, n) 
       if(all(sd == 0))
@@ -553,20 +555,20 @@ muck <- function(y.obs, y.obs.er=0, y.target, y.target.er=0, F.contam=1, F.conta
 
   if(talk)
     if(length(y.obs) == 1) {
-      message("Observed age: ", y.obs, "+-", y.obs.er, " C14 BP (", F.obs[,1], "+-", F.obs[,2], " F14C)")
-      message("Target age: ", y.target, " C14 BP (", F.target[,1], " F14C)")
+      message("Observed age: ", round(y.obs, decimals), " +- ", round(y.obs.er, decimals), " C14 BP (", F.obs[,1], "+-", F.obs[,2], " F14C)")
+      message("Target age: ", round(y.target, decimals), " C14 BP (", round(F.target[,1], decimals), " F14C)")
       if(is.na(perc.contam))
-        message("Calculation: (", F.obs[,1], "-", F.target[,1], ")/(", F.contam, " - ", F.target[,1], ") = ", round(median(frac), decimals+2)) else
+        message("Calculation: (", round(F.obs[,1], decimals), "-", round(F.target[,1],decimals), ")/(", round(F.contam, decimals), " - ", round(F.target[,1], decimals), ") = ", round(median(frac), decimals+2)) else
           message("Calculation: ", F.target[,1], " + ((", F.obs[,1], "-", F.target[,1], ") / ", frac, ") = ", round(median(F.contam), decimals+2))
       if(is.na(perc.contam)) {
         if(MC)
           message("Contamination required: ", perc, "+-", perc.sd, "%" ) else
             message("Contamination required: ", perc, "%" )
-        if(perc>100)
+        if(perc>100 && !is.na(perc))
           message("That's >100%, please check your values (is it a postbomb date?)")
       } else {
         if(MC)
-          message("F of contamination: ", F.contam, "+-", F.contam.er)	else
+          message("F of contamination: ", F.contam, " +- ", F.contam.er)	else
             message("F of contamination: ", F.contam)
       }
     }
