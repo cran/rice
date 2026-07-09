@@ -11,7 +11,7 @@ draw.dates(
   cc = 1,
   postbomb = FALSE,
   bombalert = TRUE,
-  glue = 1,
+  glue = 0,
   as.F = TRUE,
   is.F = FALSE,
   is.pMC = FALSE,
@@ -19,6 +19,7 @@ draw.dates(
   deltaSTD = 0,
   thiscurve = c(),
   oncurve = FALSE,
+  curve.lim = c(),
   timescale = "C",
   reservoir = c(),
   normal = TRUE,
@@ -101,6 +102,8 @@ draw.dates(
 \item{thiscurve}{As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). Defaults to c().}
 
 \item{oncurve}{Whether or not to plot the calibration curve and then plot the dates onto this curve. Defaults to FALSE.}
+
+\item{curve.lim}{Limits of the radiocarbon age axis when oncurve=TRUE. Calculates the ranges automatically if left empty.}
 
 \item{timescale}{If oncurve is used, by default the calibration curve is plotted in the C14 age timescale. Alternatively, it can be provided as \code{timescale="F14C"} or \code{timescale="pMC"}}
 
@@ -186,9 +189,9 @@ draw.dates(
 
 \item{labels}{Add labels to the dates. Empty by default.}
 
-\item{label.x}{Horizontal position of the date labels. By default draws them before the youngest age (1), but can also draw them after the oldest age (2), or above its mean (3).}
+\item{label.x}{Horizontal position of the date labels. By default draws them before the youngest age (1), but can also draw them after the oldest age (2), or above its mean (3). Alternatively, the desired x coordinates for all dates can be provided.}
 
-\item{label.y}{Vertical positions of the depths/labels. Defaults to 0 (or 1 if label.x is 3 or 4).}
+\item{label.y}{Vertical positions of the depths/labels. Defaults to 0 (or 1 if label.x is 3 or 4). Alternatively, the desired y coordinates for all dates can be provided.}
 
 \item{label.cex}{Size of labels.}
 

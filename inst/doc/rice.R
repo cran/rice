@@ -7,6 +7,13 @@
 ## -----------------------------------------------------------------------------
 library(rice)
 
+## ----fig.width=7, fig.asp=.8, dpi=100-----------------------------------------
+layout(matrix(1:4, ncol=2, byrow=TRUE))
+C14.cycle(as.ratio=FALSE, exchange=0, halflife=Inf) # top-left panel
+C14.cycle(as.ratio=FALSE, exchange=0) # top-right
+C14.cycle(as.ratio=FALSE) # bottom-left
+C14.cycle() # bottom-right
+
 ## ----fig.width=4, fig.asp=.8--------------------------------------------------
 howmuchC14(0)
 howmuchC14(55e3)

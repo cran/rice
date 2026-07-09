@@ -542,7 +542,9 @@ calibrate <- function(age=2450, error=50, cc=1, postbomb=FALSE, bombalert=TRUE, 
     colnames(hpds)[3] <- "%"
     print.hpds <- rbind(colnames(hpds), apply(hpds, 2, as.character))
     legend(legend2.loc, legend=print.hpds, ncol=3, cex=legend.cex, bty="n")
-  }
+  } else
+      hpds <- hpd(cbind(cal.dist[,1], cal.dist[,2]/max(cal.dist[,2])),
+        prob=prob, BCAD=BCAD)
   
   if(truncate.warning)
     if(print.truncate.warning)
@@ -643,6 +645,7 @@ draw.dist <- function(dist, on.y=FALSE, rotate.axes=FALSE, mirror=FALSE, up=TRUE
 #' @param deltaSTD Uncertainty of the age offset (1 standard deviation). Can also be provided within option 'reservoir'.
 #' @param thiscurve As an alternative to providing cc and/or postbomb, the data of a specific curve can be provided (3 columns: cal BP, C14 age, error). Defaults to c().
 #' @param oncurve Whether or not to plot the calibration curve and then plot the dates onto this curve. Defaults to FALSE.
+#' @param curve.lim Limits of the radiocarbon age axis when oncurve=TRUE. Calculates the ranges automatically if left empty.
 #' @param timescale If oncurve is used, by default the calibration curve is plotted in the C14 age timescale. Alternatively, it can be provided as \code{timescale="F14C"} or \code{timescale="pMC"}  
 #' @param reservoir Reservoir age, or reservoir age and age offset.
 #' @param normal Use the normal distribution to calibrate dates (default TRUE). The alternative is to use the t model (Christen and Perez 2009).
@@ -685,8 +688,8 @@ draw.dist <- function(dist, on.y=FALSE, rotate.axes=FALSE, mirror=FALSE, up=TRUE
 #' @param d.lim Limits of the vertical axis (if present)
 #' @param d.rev Reverse the y-axis. Defaults to TRUE
 #' @param labels Add labels to the dates. Empty by default.
-#' @param label.x Horizontal position of the date labels. By default draws them before the youngest age (1), but can also draw them after the oldest age (2), or above its mean (3). 
-#' @param label.y Vertical positions of the depths/labels. Defaults to 0 (or 1 if label.x is 3 or 4).
+#' @param label.x Horizontal position of the date labels. By default draws them before the youngest age (1), but can also draw them after the oldest age (2), or above its mean (3). Alternatively, the desired x coordinates for all dates can be provided.
+#' @param label.y Vertical positions of the depths/labels. Defaults to 0 (or 1 if label.x is 3 or 4). Alternatively, the desired y coordinates for all dates can be provided.
 #' @param label.offset Offsets of the positions of the depths/labels, giving the x and y offsets. Defaults to c(0,0).
 #' @param label.cex Size of labels. 
 #' @param label.col Colour of the labels. Defaults to the colour given to that of the dates.
@@ -707,7 +710,10 @@ draw.dist <- function(dist, on.y=FALSE, rotate.axes=FALSE, mirror=FALSE, up=TRUE
 #'   draw.dates(y, er, y, d.lab="Radiocarbon age (BP)", bombalert=FALSE)
 #'   draw.ccurve(add=TRUE, cc1.col=rgb(0,.5,0,.5))
 #' @export
-draw.dates <- function(age, error, depth=c(), cc=1, postbomb=FALSE, bombalert=TRUE, glue=1, as.F=TRUE, is.F=FALSE, is.pMC=FALSE, deltaR=0, deltaSTD=0, thiscurve=c(), oncurve=FALSE, timescale="C", reservoir=c(), normal=TRUE, same.peaks=FALSE, peak=1, ex=c(), as.unit=FALSE, t.a=3, t.b=4, prob=0.95, threshold=.001, BCAD=FALSE, draw.hpd=TRUE, hpd.border=NA, rounded=0.1, every=1, mirror=TRUE, up=TRUE, draw.base=TRUE, col=rgb(0,0,1,.3), border=col, lwd=1, hpd.col=col, cal.col=rgb(0, 0.5, 0.5, 0.35), cal.border=cal.col, cal.hpd.col=cal.col, add=FALSE, ka=FALSE, rotate.axes=FALSE, normalise=TRUE, cc.col=rgb(0,.5,0,.5), cc.border=cc.col, cc.lwd=1, cc.resample=5, age.lab=c(), age.lim=c(), age.rev=FALSE, cal.rev=FALSE, d.lab=c(), d.lim=c(), d.rev=TRUE, labels=c(), label.x=1, label.y=c(), label.cex=0.8, label.col=col, label.offset=c(0,0), label.adj=c(1,0), label.rot=0, cc.dir=NULL, dist.res=1000, ...) {
+draw.dates <- function(age, error, depth=c(), cc=1, postbomb=FALSE, bombalert=TRUE, glue=0, as.F=TRUE, is.F=FALSE, is.pMC=FALSE, deltaR=0, deltaSTD=0, thiscurve=c(), oncurve=FALSE, curve.lim=c(), timescale="C", reservoir=c(), normal=TRUE, same.peaks=FALSE, peak=1, ex=c(), as.unit=FALSE, t.a=3, t.b=4, prob=0.95, threshold=.001, BCAD=FALSE, draw.hpd=TRUE, hpd.border=NA, rounded=0.1, every=1, mirror=TRUE, up=TRUE, draw.base=TRUE, col=rgb(0,0,1,.3), border=col, lwd=1, hpd.col=col, cal.col=rgb(0, 0.5, 0.5, 0.35), cal.border=cal.col, cal.hpd.col=cal.col, add=FALSE, ka=FALSE, rotate.axes=FALSE, normalise=TRUE, cc.col=rgb(0,.5,0,.5), cc.border=cc.col, cc.lwd=1, cc.resample=5, age.lab=c(), age.lim=c(), age.rev=FALSE, cal.rev=FALSE, d.lab=c(), d.lim=c(), d.rev=TRUE, labels=c(), label.x=1, label.y=c(), label.cex=0.8, label.col=col, label.offset=c(0,0), label.adj=c(1,0), label.rot=0, cc.dir=NULL, dist.res=1000, ...) {
+
+  if(length(cc) == 1 && cc==2 && glue > 0)
+    warning("the marine calibration curve cannot be 'glued' to an (atmospheric) postbomb curve")
 
   age <- age - deltaR
   error <- sqrt(error^2 + deltaSTD^2)
@@ -758,13 +764,16 @@ draw.dates <- function(age, error, depth=c(), cc=1, postbomb=FALSE, bombalert=TR
   }
 
   calibs <- list()
-  for(i in 1:length(age))
-    if(one.cc)
+  rng <- array(NA, dim=c(length(age),2))
+  for(i in 1:length(age)) {
+    if(one.cc) 
       calibs[[i]] <- caldist(age[i], error[i], cc=cc, BCAD=BCAD, thiscurve=this.cc, threshold=threshold) else
         calibs[[i]] <- caldist(age[i], error[i], cc=cc[i], postbomb=postbomb[i],
           as.F=as.F, is.F=is.F, is.pMC=is.pMC, glue=glue, bombalert=bombalert, normal=normal,
           t.a=t.a, t.b=t.b, normalise=FALSE, thiscurve=thiscurve, cc.resample=cc.resample,
           threshold=threshold, BCAD=BCAD, cc.dir=cc.dir)
+    rng[i,] <- age.range(calibs[[i]], prob=prob)
+  }
 
   if(length(age.lim) == 0)
     age.range <- range(vapply(calibs, function(z) range(z[,1]), numeric(2))) else
@@ -826,10 +835,10 @@ draw.dates <- function(age, error, depth=c(), cc=1, postbomb=FALSE, bombalert=TR
         if(grepl("p", tolower(timescale)))
           d.lab <- "pMC" else 
          if(grepl("f", tolower(timescale)))
-           d.lab <- "F14C" else
+           d.lab <- expression(F^14*C)  else
            if(ka)
-             d.lab <- "C14 kBP" else
-               d.lab <- "C14 BP" 
+             d.lab <- expression(""^14*C~kBP)  else
+               d.lab <- expression(""^14*C~BP) 
       } else
           d.lab <- "depth"
 
@@ -843,8 +852,11 @@ draw.dates <- function(age, error, depth=c(), cc=1, postbomb=FALSE, bombalert=TR
       d.lim <- rev(d.lim)
     if(age.rev || cal.rev)
       age.lim <- rev(age.lim)
-    if(oncurve)
-      age.lim <- rev(age.lim)
+    if(oncurve) {
+  	  d.lim <- rev(d.lim)
+      if(length(curve.lim) == 2)
+        d.lim <- curve.lim
+    }
     if(rotate.axes)
       plot(0, type="n", ylim=age.lim, ylab=age.lab, xlim=d.lim, xlab=d.lab, ...) else
         plot(0, type="n", xlim=age.lim, xlab=age.lab, ylim=d.lim, ylab=d.lab, ...)
@@ -874,7 +886,8 @@ draw.dates <- function(age, error, depth=c(), cc=1, postbomb=FALSE, bombalert=TR
     peak <- ex
 
   # estimate the required distribution height
-  peak <- peak * (max(depth, na.rm=TRUE) - min(depth, na.rm=TRUE)) / length(depth)
+  if(diff(range(depth, na.rm=TRUE)) > 0)
+    peak <- peak * (max(depth, na.rm=TRUE) - min(depth, na.rm=TRUE)) / length(depth)
   if(length(peak) == 1)
     peak <- rep(peak, nrow(probs))
 
@@ -890,20 +903,23 @@ draw.dates <- function(age, error, depth=c(), cc=1, postbomb=FALSE, bombalert=TR
             lines(age.seq, depth[i]+peak[i]*ifelse(up,-1,1)*probs[,i], col=col[i], lwd=lwd)
 
     if(length(labels) > 0) {
-      xx <- c(min(age.seq), max(age.seq), mean(age.seq))
+      xx <- c(min(rng[i,]), mean(rng[i,]), max(rng[i,]))
       if(!BCAD) xx <- xx[c(2,1,3)]
       x <- xx[label.x]
-      if(length(label.y) == 0) {
-        y <- depth[i]
-        if(label.x > 2)
-          ifelse(up, y <- y+1, y <- y-1)
-      }
+      if(length(label.x) == length(labels)) # then we assume the x coordinates have been provided
+        x <- label.x[i]
+  #    if(length(label.y) == length(labels))
+  #      y <- label.y[i] else
+      y <- depth[i]
+       # if(label.x > 2)
+       #   ifelse(up, y <- y+1, y <- y-1)
 
       if(rotate.axes)
          text(y+label.offset[1], x+label.offset[2], labels[i], cex=label.cex, col=label.col[i], adj=label.adj, srt=label.rot) else
            text(x+label.offset[2], y+label.offset[1], labels[i], cex=label.cex, col=label.col[i], adj=label.adj, srt=label.rot)
     }
   }
+
   invisible(list(ages=replicate(ncol(probs), age.seq), probs=probs))
 
 }
