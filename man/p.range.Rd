@@ -8,7 +8,7 @@ p.range(
   x1,
   x2,
   y,
-  er,
+  er = c(),
   cc = 1,
   postbomb = FALSE,
   glue = 0,
@@ -21,6 +21,7 @@ p.range(
   t.a = 3,
   t.b = 4,
   BCAD = FALSE,
+  zero = FALSE,
   threshold = 0
 )
 }
@@ -57,6 +58,8 @@ p.range(
 
 \item{BCAD}{Which calendar scale to use. Defaults to cal BP, \code{BCAD=FALSE}.}
 
+\item{zero}{Whether or not zero BC/AD should be included if using BCAD=TRUE. Defaults to \code{zero=FALSE}.}
+
 \item{threshold}{Report only values above a threshold. Defaults to \code{threshold=0}.}
 }
 \value{
@@ -66,7 +69,7 @@ The probability of a date lying within a certain calendar age range.
 Find the probability of a calibrated date lying within an age range
 }
 \details{
-The function can only deal with one date at a time.
+Instead of providing a to-be-calibrated age (y +- er), one can also provide an age distribution (as two columns: cal BP ages and their probabilities) or a vector of ages.
 }
 \examples{
 p.range(2800, 2400, 2450, 20)

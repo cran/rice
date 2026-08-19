@@ -1,4 +1,4 @@
-# adapt point.estimates so that it can accommodate e.g. a list of values e.g. from Bacon.Age.d
+# could draw.dates and calibratable be modified to work with custom-built as well as prebuilt curves? E.g., using cc=4 for a custom-built curve, cc=5 for another one...
 
 # can intcal.data be made to show the SH data? Currently shows the NH data
 

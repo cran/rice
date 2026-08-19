@@ -1,89 +1,92 @@
-## ----eval=FALSE---------------------------------------------------------------
+## ----install, eval=FALSE------------------------------------------------------
 # install.packages('rice')
 
-## ----eval=FALSE---------------------------------------------------------------
+## ----update, eval=FALSE-------------------------------------------------------
 # update.packages()
 
-## -----------------------------------------------------------------------------
+## ----load---------------------------------------------------------------------
 library(rice)
 
-## ----fig.width=7, fig.asp=.8, dpi=100-----------------------------------------
+## ----C14.cycle, fig.width=7, fig.asp=.8, dpi=100------------------------------
 layout(matrix(1:4, ncol=2, byrow=TRUE))
 C14.cycle(as.ratio=FALSE, exchange=0, halflife=Inf) # top-left panel
 C14.cycle(as.ratio=FALSE, exchange=0) # top-right
 C14.cycle(as.ratio=FALSE) # bottom-left
 C14.cycle() # bottom-right
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----howmuchC14, fig.width=4, fig.asp=.8--------------------------------------
 howmuchC14(0)
 howmuchC14(55e3)
 x <- seq(0, 55e3, length=100) # a sequence of ages
 y <- sapply(x, function(x) howmuchC14(x, talk=FALSE)[1])
 plot(x, y, type="l", xlab="time (cal BP)", ylab="C-14 remaining")
 
-## ----eval=FALSE---------------------------------------------------------------
+## ----music, eval=FALSE--------------------------------------------------------
 # radio(30000)
 
-## -----------------------------------------------------------------------------
+## ----sim.date-----------------------------------------------------------------
+sim.date(9000, 10) # 10 dates
+
+## ----fractionation_and_background---------------------------------------------
 adjust.fractionation(9000, -17) # the sample's d13C was measured at -17
 adjust.background(9000, 50, 48000, 200) # a well-oiled machine, with backgrounds of F=0.00254
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----draw_calibration_curve_1, fig.width=4, fig.asp=.8------------------------
 draw.ccurve()
 grid()
 abline(0, 1, lty=2)
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----draw_calibration_curve_2, fig.width=4, fig.asp=.8------------------------
 draw.ccurve(1000, 2020, BCAD=TRUE, cc2='marine20', add.yaxis=TRUE)
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----draw_calibration_curve_3, fig.width=4, fig.asp=.8------------------------
 draw.ccurve(1600, 1950, BCAD=TRUE)
 
-## -----------------------------------------------------------------------------
+## ----timescales_1-------------------------------------------------------------
 BCADtoC14(1694) # gives 129 +- 9 14C BP 
 C14toBCAD(129) # the curve crosses 129 14C BP 5 times
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----timescales_2, fig.width=4, fig.asp=.8------------------------------------
 draw.ccurve(1600, 1950, BCAD=TRUE)
 abline(h=BCADtoC14(1694), lty=3)
 abline(v=C14toBCAD(129), lty=3)
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----draw_ccurve_1, fig.width=4, fig.asp=.8-----------------------------------
 draw.ccurve(1600, 2020, BCAD=TRUE, cc2='nh1')
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----draw_ccurve_2, fig.width=4, fig.asp=.8-----------------------------------
 draw.ccurve(1600, 2020, BCAD=TRUE, cc2='nh1', add.yaxis=TRUE)
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----draw_ccurve_3, fig.width=4, fig.asp=.8-----------------------------------
 draw.ccurve(50000, 35000, timescale="D")
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----draw_ccurve_4, fig.width=4, fig.asp=.8-----------------------------------
 draw.ccurve(cc1="stuiver_suess_1966", cc2="pearson_stuiver_1986")
 
-## -----------------------------------------------------------------------------
+## ----timescales_3-------------------------------------------------------------
 calBPtoC14(10.5)
 BCADtoC14(1940:1950)
 
-## -----------------------------------------------------------------------------
+## ----timescales_4-------------------------------------------------------------
 BCADtocalBP(2025)
 BCADtocalBP(-1, zero=TRUE)
 BCADtocalBP(-1, zero=FALSE)
 
-## -----------------------------------------------------------------------------
+## ----timescales_5-------------------------------------------------------------
 Delta14CtoF14C(152, t=4000)
 F14CtoDelta14C(0.71, t=4000)
 
-## -----------------------------------------------------------------------------
+## ----timescales_6-------------------------------------------------------------
 C14toDelta14C(152, t=4000)
 Delta14CtoC14(592, t=4000)
 
-## ----fig.width=5, fig.asp=1---------------------------------------------------
+## ----draw.CF, fig.width=5, fig.asp=1------------------------------------------
 draw.CF(50000, 3000) 
 
-## ----fig.width=8, fig.asp=.6--------------------------------------------------
+## ----fromto, fig.width=8, fig.asp=.6------------------------------------------
 fromto(100, "calBP")
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----draw.D14C, fig.width=4, fig.asp=.8---------------------------------------
 x <- seq(0, 55e3, length=1e3)
 cc <- calBPtoC14(x)
 Dcc <- C14toDelta14C(cc[,1], cc[,2], x)
@@ -93,64 +96,64 @@ plot(x/1e3, Dcc[,1]+Dcc[,2], type="l", xlab="kcal BP", ylab="")
 mtext(expression(paste(Delta, ""^{14}, "C")), 2, 1.7)
 lines(x/1e3, Dcc[,1]-Dcc[,2])
 
-## ----fig.width=6, fig.asp=.8--------------------------------------------------
+## ----drawcurve, fig.width=6, fig.asp=.8---------------------------------------
 draw.ccurve(cc2="IntCal20", timescale2="D", add.yaxis=TRUE)
 
-## -----------------------------------------------------------------------------
+## ----shroud-------------------------------------------------------------------
 data(shroud)
 shroud
 
-## -----------------------------------------------------------------------------
+## ----pool---------------------------------------------------------------------
 pool(shroud$y,shroud$er) 
 Zu <- grep("ETH", shroud$ID) # Zurich lab only
 pool(shroud$y[Zu],shroud$er[Zu])
 
-## -----------------------------------------------------------------------------
+## ----wmeans-------------------------------------------------------------------
 weighted_means(shroud$y[Zu],shroud$er[Zu])
 
-## ----fig.width=5, fig.asp=.8--------------------------------------------------
+## ----as.one, fig.width=5, fig.asp=.8------------------------------------------
 as.one(shroud$y,shroud$er)
 
-## ----fig.width=5, fig.asp=.8--------------------------------------------------
+## ----as.bin, fig.width=5, fig.asp=.8------------------------------------------
 as.bin(shroud$y,shroud$er, 100, move.by=25)
 
-## ----fig.width=5, fig.asp=.8--------------------------------------------------
+## ----spread, fig.width=5, fig.asp=.8------------------------------------------
 spread(shroud$y,shroud$er)
 
-## ----fig.width=5, fig.asp=.8--------------------------------------------------
+## ----span, fig.width=5, fig.asp=.8--------------------------------------------
 span(700, 20, 750, 20)
 
-## ----fig.width=5, fig.asp=.8--------------------------------------------------
+## ----overlap, fig.width=5, fig.asp=.8-----------------------------------------
 y <- c(3820, 4430+90)
 er <- c(40, sqrt(40^2 + 25^2)) 
 cc <- c(1,2)
 overlap(y, er, cc=cc)
 
-## ----fig.width=4, fig.asp=1---------------------------------------------------
+## ----calibratable, fig.width=4, fig.asp=1-------------------------------------
 data(shroud)
 calibratable(shroud$y, shroud$er, shroud$ID, BCAD=TRUE)
 
-## ----fig.width=5, fig.asp=.8--------------------------------------------------
+## ----contaminate_1, fig.width=5, fig.asp=.8-----------------------------------
 contaminate(5000, 20, 10, F.contam=1)
 
-## ----fig.width=5, fig.asp=.8--------------------------------------------------
+## ----contaminate_2, fig.width=5, fig.asp=.8-----------------------------------
 contaminate(66e6, 1e6, 0.5, 0.1, 1)
 
-## ----fig.width=5, fig.asp=.8--------------------------------------------------
+## ----clean_1, fig.width=5, fig.asp=.8-----------------------------------------
 clean(9000, 100, 10)
 
-## ----fig.width=5, fig.asp=.8--------------------------------------------------
+## ----muck_1, fig.width=5, fig.asp=.8------------------------------------------
 muck(591, 30, BCADtoC14(40)[,1], 0, 1)
 
-## ----fig.width=5, fig.asp=.8--------------------------------------------------
+## ----muckshroud, fig.width=5, fig.asp=.8--------------------------------------
 perFaith <- BCADtoC14(40)
 repairF <- BCADtoF14C(1532)
 muck(591, 30, perFaith[,1], perFaith[,2], repairF[,1], repairF[,2])
 
-## ----fig.width=5, fig.asp=.8--------------------------------------------------
+## ----muck_2, fig.width=5, fig.asp=.8------------------------------------------
 muck(500, 20, 600, 25, perc.contam=10)
 
-## ----fig.width=6, fig.asp=.8--------------------------------------------------
+## ----draw.contamination_1, fig.width=6, fig.asp=.8----------------------------
 real.14C <- seq(0, 50e3, length=200)
 contam <- seq(0, 10, length=101) # 0 to 10% contamination
 contam.col <- rainbow(length(contam))
@@ -160,63 +163,63 @@ for (i in 1:length(contam)) {
   lines(real.14C, observed[,1], col = contam.col[i])
 }
 
-## ----fig.width=6, fig.asp=.8--------------------------------------------------
+## ----draw.contamination_2, fig.width=6, fig.asp=.8----------------------------
 draw.contamination()
 
-## -----------------------------------------------------------------------------
+## ----fractions----------------------------------------------------------------
 Cs <- c(.02, .05, .03, .04) # carbon contents of each fraction
 wghts <- c(5, 4, 2, .5) # weights for all fractions, e.g., in mg
 ages <- c(130, 130, 130, NA) # ages of all fractions. The unmeasured one is NA
 errors <- c(10, 12, 10, NA) # errors, unmeasured is NA
 fractions(150, 20, Cs, wghts, ages, errors) # assuming a bulk age of 150 +- 20 C14 BP 
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----calib_1, fig.width=4, fig.asp=.8-----------------------------------------
 calib.130 <- caldist(130, 10, BCAD=TRUE)
 plot(calib.130, type="l")
 
-## -----------------------------------------------------------------------------
+## ----l.calib------------------------------------------------------------------
 l.calib(145, 130, 10)
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----r.calib, fig.width=4, fig.asp=.8-----------------------------------------
 dice <- r.calib(100, 130, 10)
 plot(density(dice))
 rug(dice)
 
-## -----------------------------------------------------------------------------
+## ----hpd----------------------------------------------------------------------
 hpd(calib.130)
 
-## ----fig.width=4, fig.asp=.8--------------------------------------------------
+## ----calib_plot, fig.width=4, fig.asp=.8--------------------------------------
 calib.2450 <- caldist(2450, 20)
 plot(calib.2450, type="l")
 points.2450 <- point.estimates(calib.2450)
 points.2450
 abline(v=points.2450, col=1:4, lty=2)
 
-## ----fig.width=5, fig.asp=1---------------------------------------------------
+## ----calibrate_1, fig.width=5, fig.asp=1--------------------------------------
 calibrate(2450, 40)
 
-## ----fig.width=5, fig.asp=1---------------------------------------------------
+## ----calibrate_2, fig.width=5, fig.asp=1--------------------------------------
 mycurve <- smooth.ccurve(smooth=50)
 calibrate(2450, 40, thiscurve=mycurve)
 
-## ----fig.width=5, fig.asp=1---------------------------------------------------
+## ----calibrate_3, fig.width=5, fig.asp=1--------------------------------------
 try(calibrate(130,30))
 calibrate(130, 30, bombalert=FALSE)
 
-## -----------------------------------------------------------------------------
+## ----younger.older------------------------------------------------------------
 younger(150, 130, 10)
 older(150, 130, 10)
 
-## -----------------------------------------------------------------------------
+## ----p.range------------------------------------------------------------------
 p.range(300, 150, 130, 10)
 
-## ----fig.width=5, fig.asp=1---------------------------------------------------
+## ----push.normal, fig.width=5, fig.asp=1--------------------------------------
 push.normal(2450,40, 400,20)
 
-## ----eval=FALSE---------------------------------------------------------------
+## ----map.shells_1, eval=FALSE-------------------------------------------------
 # myshells <- map.shells(S=54, W=-8, N=61, E=0) # the northern part of the UK
 
-## ----fig.width=5, fig.asp=1, echo=FALSE---------------------------------------
+## ----map.shells_2, fig.width=5, fig.asp=1, echo=FALSE-------------------------
 if(requireNamespace("sf", quietly = TRUE) &&
   requireNamespace("rnaturalearth", quietly = TRUE) &&
   requireNamespace("rnaturalearthdata", quietly = TRUE)) {
@@ -225,11 +228,11 @@ if(requireNamespace("sf", quietly = TRUE) &&
       myshells <- map.shells(S = 54, W = -8, N = 61, E = 0, mapsize = "small", currents=FALSE)
     }
 
-## ----eval=FALSE---------------------------------------------------------------
+## ----shells.mean_1, eval=FALSE------------------------------------------------
 # head(myshells)
 # shells.mean(myshells)
 
-## ----fig.width=5, fig.asp=1, echo=FALSE---------------------------------------
+## ----shells.mean_2, fig.width=5, fig.asp=1, echo=FALSE------------------------
 myshells <- map.shells(S=54, W=-8, N=61, E=0, currents=FALSE) # the northern part of the UK
 head(myshells)
 shells.mean(myshells)
@@ -238,17 +241,17 @@ shells.mean(myshells)
 # myshells <- find.shells(20, -30, 20)
 # shells.mean(myshells, distance=TRUE)
 
-## ----fig.width=5, fig.asp=1, echo=FALSE---------------------------------------
+## ----shells.mean_3, fig.width=5, fig.asp=1, echo=FALSE------------------------
 myshells <- find.shells(20, -30, 20, currents=FALSE)
 shells.mean(myshells, distance=TRUE)
 
-## ----fig.width=5, fig.asp=1, eval=FALSE---------------------------------------
+## ----find.shells, fig.width=5, fig.asp=1, eval=FALSE--------------------------
 # find.shells(120, 10, 50, browse=TRUE)
 
-## ----fig.width=5, fig.asp=1, eval=FALSE---------------------------------------
+## ----p3k14c, fig.width=5, fig.asp=1, eval=FALSE-------------------------------
 # p3k14c <- map.dates()
 
-## ----fig.width=4, fig.asp=1---------------------------------------------------
+## ----draw.dates_1, fig.width=4, fig.asp=1-------------------------------------
 set.seed(123)
 dates <- sort(sample(500:2500,5))
 errors <- .05*dates
@@ -256,11 +259,11 @@ depths <- 1:length(dates)
 my.labels <- c("my", "very", "own", "simulated", "dates")
 draw.dates(dates, errors, depths, BCAD=TRUE, labels=my.labels, age.lim=c(0, 1800))
 
-## ----fig.width=4, fig.asp=1---------------------------------------------------
+## ----draw.dates_2, fig.width=4, fig.asp=1-------------------------------------
 plot(250*1:5, 5:1, xlim=c(0, 1800), ylim=c(5,0), xlab="AD", ylab="dates")
 draw.dates(dates, errors, depths, BCAD=TRUE, add=TRUE, labels=my.labels, mirror=FALSE)
 
-## ----fig.width=5, fig.asp=1---------------------------------------------------
+## ----joy, fig.width=5, fig.asp=1----------------------------------------------
 n <- 50; set.seed(42) # number of dates; always the same answer
 from <- 2200; to <- 2900 # calendar age limits
 y <- rnorm(n, 2620, 30) - 6*(1:n) # going through the Hallstatt Plateau

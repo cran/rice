@@ -1,13 +1,23 @@
-# rice 2.2.2
+# rice 2.3.0
+* new function `sim.date` to simulate a radiocarbon date from a calendar date. This looks up the calibration curve's C14 age and error, adds any scatter and reservoir effect, and uses a 2 permille laboratory error by default. 
+* the functions `younger`, `older` and `p.range` now also accept age distributions (two columns: ages and their probabilities) or vectors of ages (e.g., rnorm(1e6, 2450, 50)).
+* the functions `younger`, `older` and `p.range` now deal better with `BCAD=TRUE`.
+* in functions which use `BCAD=TRUE` as option, `zero` is now an additional option (for those who wish to include 0 BC/AD; defaults to FALSE).
+* the functions `push.gammma` and `push.normal` now invisibly return the distribution (ages and probabilities) as well as the hpd ranges. 
+* cleaned up the messaging of the `fromto` function.
+* `F14CtoC14` now returns correct uncertainties if >1 F14C values are provided together with just 1 value for er (for example, `F14CtoC14(runif(10, .3, .4), .002)`).
+* the `calibrate` function gains options to specify `xaxt` and `yaxt` (set to `"n"` for no horizontal/vertical axis, or to the default `"s"` for an axis).
+* corrected a versioning error in the News.md file of rice version 2.2.1 (some of the items currently listed under version 2.2.1 were wrongly listed under the then unreleased version 2.2.2).
+* updated the vignette.
+
+# rice 2.2.1
+* `draw.dates` now plots calibrated dates correctly also if cc>1.
+* `draw.dates` now plots any labels to the left, middle or right of calibrated dates. Alternatively, the x and/or y coordinates of the labels can be specified, e.g., `labels.x=seq(1000, 0, length=length(y))`.
 * `draw.dates` now plots the vertical axis correctly when `oncurve=TRUE` (which plots the radiocarbon dates on the calibration curve), and has a new option `curve.lim` (axis limits, calculated automatically when left empty).
 * new function `C14.cycle` which simulates the accumulation of 14C into the atmosphere and ocean over time. We start with 0% 14C in any of the reservoirs, and 14C builds up each year (but also decays at a constant rate). 14C is transferred to the ocean, and over time the amount of 14C as well as the 14C/12C ratios in each of the reservoirs change.
 * downloaded the latest (May 2026) update of calib.org/marine/ 
 * the `point.estimates` and `hpd` functions now can also deal with variables such as `rnorm(1000)` or Bacon output such as `Bacon.Age.d(20)`.
 * added citation to Blaauw & Reimer 2026 (Radiocarbon), which describes the `rice` package.
-
-# rice 2.2.1
-* `draw.dates` now plots calibrated dates correctly also if cc>1.
-* `draw.dates` now plots any labels to the left, middle or right of calibrated dates. Alternatively, the x and/or y coordinates of the labels can be specified, e.g., `labels.x=seq(1000, 0, length=length(y))`.
 * the `draw=FALSE` option in `calibrate` no longer throws an error.
 * made the installation of audio/tuneR packages for the `radio` function more user-friendly.
 
