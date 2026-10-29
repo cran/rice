@@ -14,10 +14,12 @@ export(C14tob2k)
 export(C14tocalBP)
 export(C14topMC)
 export(CtoF)
+export(D14C_decaycorrect)
 export(Delta14CtoC14)
 export(Delta14CtoF14C)
 export(Delta14CtopMC)
 export(F14C.age)
+export(F14C_decaycorrect)
 export(F14CtoC14)
 export(F14CtoDelta14C)
 export(F14CtopMC)
@@ -29,6 +31,7 @@ export(age.pMC)
 export(age.range)
 export(as.bin)
 export(as.one)
+export(atom)
 export(b2ktoBCAD)
 export(b2ktoC14)
 export(b2ktoDelta14C)
@@ -48,6 +51,7 @@ export(calibrate)
 export(clean)
 export(contaminate)
 export(coverage)
+export(decay_series)
 export(draw.CF)
 export(draw.Delta14C)
 export(draw.ccurve)
@@ -108,6 +112,7 @@ importFrom(graphics,
   arrows,
   axis,
   curve,
+  grid,
   image,
   layout,
   legend,

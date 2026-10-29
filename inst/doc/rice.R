@@ -7,6 +7,14 @@
 ## ----load---------------------------------------------------------------------
 library(rice)
 
+## ----atom---------------------------------------------------------------------
+atom(1,0)
+atom(6,6)
+atom(6,8)
+
+## ----decay_series-------------------------------------------------------------
+decay_series("C", 8)
+
 ## ----C14.cycle, fig.width=7, fig.asp=.8, dpi=100------------------------------
 layout(matrix(1:4, ncol=2, byrow=TRUE))
 C14.cycle(as.ratio=FALSE, exchange=0, halflife=Inf) # top-left panel
